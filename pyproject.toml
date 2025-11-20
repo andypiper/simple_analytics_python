@@ -1,0 +1,68 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "simple-analytics-python"
+version = "0.1.0"
+description = "Python wrapper for the Simple Analytics API"
+readme = "simple_analytics/README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "Simple Analytics Python Client Contributors"}
+]
+requires-python = ">=3.10"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+keywords = ["analytics", "simple-analytics", "api", "web-analytics"]
+dependencies = [
+    "requests>=2.28.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "mypy>=1.0",
+    "black>=23.0",
+    "isort>=5.12",
+    "types-requests>=2.28",
+]
+
+[project.urls]
+Homepage = "https://github.com/simpleanalytics/python-client"
+Documentation = "https://docs.simpleanalytics.com/api"
+Repository = "https://github.com/simpleanalytics/python-client"
+Issues = "https://github.com/simpleanalytics/python-client/issues"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["simple_analytics*"]
+
+[tool.black]
+line-length = 100
+target-version = ['py310', 'py311', 'py312']
+
+[tool.isort]
+profile = "black"
+line_length = 100
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --cov=simple_analytics --cov-report=term-missing"
