@@ -2,7 +2,6 @@
 
 > A Python client library for the [Simple Analytics](https://simpleanalytics.com) API
 
-[![Python Version](https://img.shields.io/pypi/pyversions/simple-analytics-python)](https://pypi.org/project/simple-analytics-python/)
 [![License](https://img.shields.io/github/license/andypiper/simple_analytics_python)](LICENSE)
 
 A comprehensive Python wrapper for the Simple Analytics API, providing easy access to website analytics data, data exports, and account management.
@@ -34,7 +33,7 @@ A comprehensive Python wrapper for the Simple Analytics API, providing easy acce
 
 ### Requirements
 
-- Python 3.10 or higher
+- Python 3.12 or higher
 - A Simple Analytics account (for authenticated endpoints)
 
 ### Installation
@@ -327,13 +326,11 @@ The `examples/` directory contains runnable examples:
 
 | Example | Description |
 |---------|-------------|
-| `basic_usage.py` | Basic client usage and stats retrieval |
+| `basic_stats.py` | Basic client usage and stats retrieval |
 | `export_data.py` | Data export examples |
-| `uv_basic_stats.py` | UV-runnable basic stats with formatting |
-| `uv_histogram_chart.py` | Terminal histogram charts |
-| `uv_country_chart.py` | Country breakdown with emoji flags |
-| `uv_pages_chart.py` | Top pages visualization |
-| `uv_export_data.py` | UV-runnable data export |
+| `histogram_chart.py` | Terminal histogram charts |
+| `country_chart.py` | Country breakdown with emoji flags |
+| `pages_chart.py` | Top pages visualization |
 
 Run examples with:
 
@@ -344,10 +341,10 @@ export SA_USER_ID="sa_user_id_xxxx"
 export SA_HOSTNAME="your-website.com"  # Optional
 
 # Run with UV
-uv run examples/uv_basic_stats.py
+uv run examples/basic_stats.py
 
 # Or with Python
-python examples/basic_usage.py
+python examples/basic_stats.py
 ```
 
 ## Contributing
