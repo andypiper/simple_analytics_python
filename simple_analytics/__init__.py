@@ -36,6 +36,7 @@ from .exceptions import (
     NotFoundError,
     ValidationError,
     ServerError,
+    NetworkError,
 )
 from .stats import StatsAPI
 from .export import ExportAPI
@@ -58,4 +59,5 @@ __all__ = [
     "NotFoundError",
     "ValidationError",
     "ServerError",
+    "NetworkError",
 ]

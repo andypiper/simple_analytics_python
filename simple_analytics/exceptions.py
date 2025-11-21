@@ -39,3 +39,9 @@ class ServerError(SimpleAnalyticsError):
     """Raised when the server returns a 5xx error."""
 
     pass
+
+
+class NetworkError(SimpleAnalyticsError):
+    """Raised when a network error occurs (timeout, connection error, etc.)."""
+
+    pass

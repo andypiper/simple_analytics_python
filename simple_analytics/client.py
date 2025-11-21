@@ -10,6 +10,7 @@ from .exceptions import (
     NotFoundError,
     ValidationError,
     ServerError,
+    NetworkError,
 )
 
 
@@ -91,26 +92,27 @@ class SimpleAnalyticsClient:
                 return response.text
 
         # Handle error responses
+        error_data: dict | None = None
         try:
             error_data = response.json()
             message = error_data.get("error", error_data.get("message", "Unknown error"))
-        except Exception:
+        except (ValueError, requests.exceptions.JSONDecodeError):
             message = response.text or f"HTTP {response.status_code}"
 
         if response.status_code == 401:
-            raise AuthenticationError(message, response.status_code, error_data if 'error_data' in dir() else None)
+            raise AuthenticationError(message, response.status_code, error_data)
         elif response.status_code == 403:
-            raise AuthenticationError(message, response.status_code)
+            raise AuthenticationError(message, response.status_code, error_data)
         elif response.status_code == 404:
-            raise NotFoundError(message, response.status_code)
+            raise NotFoundError(message, response.status_code, error_data)
         elif response.status_code == 422:
-            raise ValidationError(message, response.status_code)
+            raise ValidationError(message, response.status_code, error_data)
         elif response.status_code == 429:
-            raise RateLimitError(message, response.status_code)
+            raise RateLimitError(message, response.status_code, error_data)
         elif response.status_code >= 500:
-            raise ServerError(message, response.status_code)
+            raise ServerError(message, response.status_code, error_data)
         else:
-            raise SimpleAnalyticsError(message, response.status_code)
+            raise SimpleAnalyticsError(message, response.status_code, error_data)
 
     def request(
         self,
@@ -136,14 +138,21 @@ class SimpleAnalyticsClient:
         url = f"{self.base_url}{endpoint}"
         headers = self._get_headers(require_auth)
 
-        response = self._session.request(
-            method=method,
-            url=url,
-            headers=headers,
-            params=params,
-            json=json,
-            timeout=self.timeout,
-        )
+        try:
+            response = self._session.request(
+                method=method,
+                url=url,
+                headers=headers,
+                params=params,
+                json=json,
+                timeout=self.timeout,
+            )
+        except requests.exceptions.Timeout as e:
+            raise NetworkError(f"Request timed out: {e}") from e
+        except requests.exceptions.ConnectionError as e:
+            raise NetworkError(f"Connection error: {e}") from e
+        except requests.exceptions.RequestException as e:
+            raise NetworkError(f"Request failed: {e}") from e
 
         return self._handle_response(response)
 

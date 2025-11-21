@@ -2,9 +2,9 @@
 
 This directory contains example scripts demonstrating how to use the Simple Analytics Python client.
 
-## UV Runnable Examples
+## Running the Examples
 
-These examples use [UV](https://docs.astral.sh/uv/) inline script dependencies, making them easy to run without manual dependency management.
+These examples use [UV](https://docs.astral.sh/uv/) inline script dependencies (PEP 723), making them easy to run without manual dependency management. They can also be run with regular Python if dependencies are installed.
 
 ### Prerequisites
 
@@ -15,28 +15,44 @@ These examples use [UV](https://docs.astral.sh/uv/) inline script dependencies, 
    export SA_USER_ID="sa_user_id_xxxx"
    ```
 
-### Running the Examples
+### Running with UV
 
 All examples can be run from the repository root directory:
 
 ```bash
 # Basic stats (works without auth for public sites)
-uv run examples/uv_basic_stats.py
+uv run examples/basic_stats.py
 
 # Histogram chart with terminal visualization
-uv run examples/uv_histogram_chart.py
+uv run examples/histogram_chart.py
 
 # Top pages horizontal bar chart
-uv run examples/uv_pages_chart.py
+uv run examples/pages_chart.py
 
 # Country breakdown charts
-uv run examples/uv_country_chart.py
+uv run examples/country_chart.py
 
 # Data export (requires authentication)
-uv run examples/uv_export_data.py
+uv run examples/export_data.py
 ```
 
-### Environment Variables
+### Running with Python
+
+If you prefer to use regular Python:
+
+```bash
+# Install the library first
+pip install -e .
+
+# Install plotext for chart examples
+pip install plotext
+
+# Then run
+python examples/basic_stats.py
+python examples/histogram_chart.py
+```
+
+## Environment Variables
 
 | Variable | Required | Description |
 |----------|----------|-------------|
@@ -46,9 +62,9 @@ uv run examples/uv_export_data.py
 
 Get your credentials from: https://simpleanalytics.com/account
 
-### Example Descriptions
+## Example Descriptions
 
-#### `uv_basic_stats.py`
+### `basic_stats.py`
 Basic usage showing how to:
 - Get overall pageview and visitor counts
 - List top pages with view counts
@@ -57,7 +73,7 @@ Basic usage showing how to:
 - See country breakdown
 - List your websites (with auth)
 
-#### `uv_histogram_chart.py`
+### `histogram_chart.py`
 Terminal visualization showing:
 - Daily pageviews as a bar chart
 - Daily visitors as a bar chart
@@ -66,19 +82,19 @@ Terminal visualization showing:
 
 Uses the `plotext` library for terminal-based charts.
 
-#### `uv_pages_chart.py`
+### `pages_chart.py`
 Terminal visualization showing:
 - Top pages as horizontal bar charts (by pageviews and visitors)
 - Detailed table with pageviews, visitors, and views-per-visitor ratio
 
-#### `uv_country_chart.py`
+### `country_chart.py`
 Terminal visualization showing:
-- Country breakdown as horizontal bar chart
+- Country breakdown as horizontal bar chart with emoji flags
 - Top 10 countries as vertical bar chart
 - Percentage breakdown with ASCII bar representation
 - Browser and device type statistics
 
-#### `uv_export_data.py`
+### `export_data.py`
 Data export demonstration showing:
 - Export pageviews as JSON
 - Export pageviews as CSV
@@ -88,19 +104,6 @@ Data export demonstration showing:
 
 **Note:** This example requires authentication.
 
-## Traditional Examples
-
-The `basic_usage.py` and `export_data.py` files are traditional Python scripts that require manual dependency installation:
-
-```bash
-# Install the library first
-pip install -e ..
-
-# Then run
-python basic_usage.py
-python export_data.py
-```
-
 ## Customizing Examples
 
 ### Using Your Own Website
@@ -109,7 +112,7 @@ Set the `SA_HOSTNAME` environment variable:
 
 ```bash
 export SA_HOSTNAME="your-website.com"
-uv run examples/uv_histogram_chart.py
+uv run examples/histogram_chart.py
 ```
 
 ### Changing Date Ranges
