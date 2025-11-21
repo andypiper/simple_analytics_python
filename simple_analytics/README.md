@@ -11,8 +11,8 @@ pip install simple-analytics-python
 Or install from source:
 
 ```bash
-git clone https://github.com/simpleanalytics/python-client.git
-cd python-client
+git clone https://github.com/andypiper/simple_analytics_python.git
+cd simple_analytics_python
 pip install -e .
 ```
 
@@ -379,4 +379,4 @@ MIT License - see LICENSE file for details.
 
 - [Simple Analytics](https://simpleanalytics.com)
 - [API Documentation](https://docs.simpleanalytics.com/api)
-- [GitHub Repository](https://github.com/simpleanalytics/python-client)
+- [GitHub Repository](https://github.com/andypiper/simple_analytics_python)

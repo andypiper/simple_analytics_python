@@ -18,9 +18,8 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Internet :: WWW/HTTP",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
@@ -40,10 +39,10 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/simpleanalytics/python-client"
+Homepage = "https://github.com/andypiper/simple_analytics_python"
 Documentation = "https://docs.simpleanalytics.com/api"
-Repository = "https://github.com/simpleanalytics/python-client"
-Issues = "https://github.com/simpleanalytics/python-client/issues"
+Repository = "https://github.com/andypiper/simple_analytics_python"
+Issues = "https://github.com/andypiper/simple_analytics_python/issues"
 
 [tool.setuptools.packages.find]
 where = ["."]
@@ -51,14 +50,14 @@ include = ["simple_analytics*"]
 
 [tool.black]
 line-length = 100
-target-version = ['py310', 'py311', 'py312']
+target-version = ['py312', 'py313']
 
 [tool.isort]
 profile = "black"
 line_length = 100
 
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.12"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
