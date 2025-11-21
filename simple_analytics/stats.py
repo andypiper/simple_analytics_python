@@ -2,8 +2,16 @@
 
 from typing import Any, TYPE_CHECKING
 
+from .exceptions import ValidationError
+
 if TYPE_CHECKING:
     from .client import SimpleAnalyticsClient
+
+# Reserved parameter names that cannot be used as filter keys
+RESERVED_PARAMS = {
+    "version", "info", "start", "end", "timezone", "limit",
+    "interval", "fields", "events"
+}
 
 
 class StatsAPI:
@@ -84,6 +92,12 @@ class StatsAPI:
             >>> # Get events
             >>> stats = client.stats.get("example.com", events=["signup", "purchase"])
         """
+        # Validate hostname
+        if not hostname or not hostname.strip():
+            raise ValidationError("hostname is required and cannot be empty")
+
+        hostname = hostname.strip()
+
         # Build endpoint
         if path:
             path = path.lstrip("/")
@@ -108,8 +122,12 @@ class StatsAPI:
         if interval:
             params["interval"] = interval
 
+        # Fields parameter is required by the API
         if fields:
             params["fields"] = ",".join(fields)
+        else:
+            # Default to basic pageviews and visitors if no fields specified
+            params["fields"] = "pageviews,visitors"
 
         if events:
             if isinstance(events, list):
@@ -117,14 +135,17 @@ class StatsAPI:
             else:
                 params["events"] = events
 
-        # Add filters
+        # Add filters (with protection against reserved parameter collision)
         if filters:
             for key, value in filters.items():
+                if key in RESERVED_PARAMS:
+                    raise ValidationError(
+                        f"Filter key '{key}' is reserved. Use the dedicated parameter instead."
+                    )
                 params[key] = value
 
-        # Determine if auth is required (non-public websites need it)
-        require_auth = bool(self._client.api_key)
-
+        # Stats API doesn't require auth for public websites
+        # Auth headers are automatically included if credentials are set
         return self._client.get(endpoint, params=params, require_auth=False)
 
     def get_events(
@@ -160,6 +181,7 @@ class StatsAPI:
             start=start,
             end=end,
             timezone=timezone,
+            fields=["pageviews", "visitors"],
             events=events,
         )
 

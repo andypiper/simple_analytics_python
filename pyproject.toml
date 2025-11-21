@@ -11,7 +11,7 @@ license = {text = "MIT"}
 authors = [
     {name = "Simple Analytics Python Client Contributors"}
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
