@@ -2,9 +2,9 @@
 
 > A Python client library for the [Simple Analytics](https://simpleanalytics.com) API
 
-[![License](https://img.shields.io/github/license/andypiper/simple_analytics_python)](LICENSE)
+[![standard-readme compliant](https://img.shields.io/badge/readme%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
 
-A comprehensive Python wrapper for the Simple Analytics API, providing easy access to website analytics data, data exports, and account management.
+A Python wrapper for the Simple Analytics API, providing easy access to website analytics data, data exports, and account management.
 
 ## Table of Contents
 
