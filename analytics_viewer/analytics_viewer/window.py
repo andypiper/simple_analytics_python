@@ -37,9 +37,24 @@ class AnalyticsWindow(Adw.ApplicationWindow):
 
         if schema_source and schema_source.lookup(schema_id, False):
             self.settings = Gio.Settings.new(schema_id)
-            self.api_key = self.settings.get_string("api-key") or os.environ.get("SA_API_KEY", "")
-            self.user_id = self.settings.get_string("user-id") or os.environ.get("SA_USER_ID", "")
-            self.hostname = self.settings.get_string("hostname") or os.environ.get("SA_HOSTNAME", "")
+
+            # Try GSettings first, fallback to env vars
+            saved_api_key = self.settings.get_string("api-key")
+            saved_user_id = self.settings.get_string("user-id")
+            saved_hostname = self.settings.get_string("hostname")
+
+            # Use saved values or fall back to env vars
+            self.api_key = saved_api_key or os.environ.get("SA_API_KEY", "")
+            self.user_id = saved_user_id or os.environ.get("SA_USER_ID", "")
+            self.hostname = saved_hostname or os.environ.get("SA_HOSTNAME", "")
+
+            # If we got values from env vars, save them to GSettings for next time
+            if not saved_api_key and self.api_key:
+                self.settings.set_string("api-key", self.api_key)
+            if not saved_user_id and self.user_id:
+                self.settings.set_string("user-id", self.user_id)
+            if not saved_hostname and self.hostname:
+                self.settings.set_string("hostname", self.hostname)
         else:
             # Fallback if schema not installed
             self.settings = None
