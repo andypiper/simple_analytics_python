@@ -111,6 +111,10 @@ class DashboardView(Gtk.ScrolledWindow):
             card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
             card.add_css_class("card")
 
+        # Set minimum and natural width for proper wrapping
+        card.set_size_request(200, -1)  # Min width 200px
+        card.set_hexpand(True)
+
         # Content box
         content = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         content.set_spacing(12)

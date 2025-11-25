@@ -51,6 +51,7 @@ class AnalyticsWindow(Adw.ApplicationWindow):
 
         self.client = None
         self.websites = []
+        self._loading_websites = False  # Flag to prevent premature data loading
 
         # Create UI
         self.setup_ui()
@@ -283,6 +284,9 @@ class AnalyticsWindow(Adw.ApplicationWindow):
 
             self.website_dropdown.set_model(string_list)
 
+            # Block the changed signal during initialization
+            self._loading_websites = True
+
             # Select the saved hostname or fall back to first website
             selected_index = 0  # Default to first
             if self.hostname:
@@ -301,8 +305,12 @@ class AnalyticsWindow(Adw.ApplicationWindow):
                 # No saved hostname, use first website
                 self.hostname = self.websites[0].get("hostname", "")
 
-            # Set the selection (this will trigger on_website_changed)
+            # Set the selection (won't trigger data load due to flag)
             self.website_dropdown.set_selected(selected_index)
+
+            # Re-enable signal handling and load data
+            self._loading_websites = False
+            self.load_data()
 
         except AuthenticationError as e:
             self.show_error(f"Authentication failed: {e.message}")
@@ -311,6 +319,10 @@ class AnalyticsWindow(Adw.ApplicationWindow):
 
     def on_website_changed(self, dropdown, param):
         """Handle website selection change."""
+        # Ignore changes during website list initialization
+        if self._loading_websites:
+            return
+
         selected = dropdown.get_selected()
         if selected != Gtk.INVALID_LIST_POSITION and self.websites:
             if isinstance(self.websites[selected], dict):
