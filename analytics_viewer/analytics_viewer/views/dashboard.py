@@ -1,8 +1,6 @@
 """Dashboard view showing overview statistics.
 
-Uses native Cairo rendering for charts (no external dependencies).
-The HistogramChart widget uses GTK's Cairo drawing API for beautiful,
-performant charts that match the Adwaita theme.
+Uses modern Cairo rendering with Adwaita styling for beautiful charts.
 """
 
 import gi
@@ -13,10 +11,8 @@ gi.require_version("Adw", "1")
 
 from gi.repository import Gtk, Adw
 
-# Use native Cairo charts (default)
-from ..cairo_charts import HistogramChart, HorizontalBarChart
-
-# Matplotlib alternative available in charts.py (optional)
+# Use modern Adwaita-styled Cairo charts
+from ..modern_charts import ModernHistogramChart
 
 
 class DashboardView(Gtk.ScrolledWindow):
@@ -73,8 +69,8 @@ class DashboardView(Gtk.ScrolledWindow):
         chart_box.set_margin_start(16)
         chart_box.set_margin_end(16)
 
-        # Native Cairo chart widget
-        self.histogram_chart = HistogramChart()
+        # Modern chart widget
+        self.histogram_chart = ModernHistogramChart()
 
         chart_box.append(self.histogram_chart)
 
