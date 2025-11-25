@@ -9,7 +9,7 @@ from datetime import datetime
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 
-from gi.repository import Gtk, Adw
+from gi.repository import Gtk, Adw, Gdk
 
 # Use modern Adwaita-styled Cairo charts
 from ..modern_charts import ModernHistogramChart
