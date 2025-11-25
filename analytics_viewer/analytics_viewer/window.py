@@ -382,6 +382,10 @@ class AnalyticsWindow(Adw.ApplicationWindow):
                 self.show_error("No websites found in your account. Please add a website at simpleanalytics.com")
                 return
 
+            # Block signal before setting model - prevents callback during initialization
+            print(f"authenticate: Blocking signal handler")
+            self.website_dropdown.handler_block(self._website_changed_handler_id)
+
             # Update website dropdown
             string_list = Gtk.StringList()
             for website in self.websites:
@@ -415,10 +419,12 @@ class AnalyticsWindow(Adw.ApplicationWindow):
                     if self.settings:
                         self.settings.set_string("hostname", self.hostname)
 
-            # Block signal, set selection, then unblock - prevents callback during initialization
+            # Set selection while signal is still blocked
             print(f"authenticate: Setting dropdown to index {selected_index} (hostname: {self.hostname})")
-            self.website_dropdown.handler_block(self._website_changed_handler_id)
             self.website_dropdown.set_selected(selected_index)
+
+            # Unblock signal after everything is set up
+            print(f"authenticate: Unblocking signal handler")
             self.website_dropdown.handler_unblock(self._website_changed_handler_id)
 
             # Now load data with the correct hostname
