@@ -57,25 +57,15 @@ class DashboardView(Gtk.ScrolledWindow):
 
         self.main_box.append(self.stats_box)
 
-        # Chart placeholder
-        chart_card = Adw.Clamp()
-        chart_card.set_maximum_size(1200)
+        # Chart area - no card, blends into window background
+        chart_clamp = Adw.Clamp()
+        chart_clamp.set_maximum_size(1200)
 
-        chart_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        chart_box.add_css_class("card")
-        chart_box.set_spacing(12)
-        chart_box.set_margin_top(16)
-        chart_box.set_margin_bottom(16)
-        chart_box.set_margin_start(16)
-        chart_box.set_margin_end(16)
-
-        # Modern chart widget
+        # Modern chart widget (no background box)
         self.histogram_chart = ModernHistogramChart()
 
-        chart_box.append(self.histogram_chart)
-
-        chart_card.set_child(chart_box)
-        self.main_box.append(chart_card)
+        chart_clamp.set_child(self.histogram_chart)
+        self.main_box.append(chart_clamp)
 
         # Top pages list
         pages_card = Adw.Clamp()

@@ -48,7 +48,7 @@ class AdwaitaColors:
     GRAY_4 = (0.80, 0.80, 0.80)      # #cccccc
     GRAY_5 = (0.60, 0.60, 0.60)      # #999999
 
-    BACKGROUND = (1.0, 1.0, 1.0)
+    BACKGROUND = (0.98, 0.98, 0.98)  # #fafafa - matches Adwaita window bg
     TEXT = (0.13, 0.13, 0.13)        # #212121
     TEXT_SECONDARY = (0.45, 0.45, 0.45)  # #737373
 
@@ -93,9 +93,11 @@ class ModernHistogramChart(Gtk.DrawingArea):
         if max_value == 0:
             max_value = 1
 
-        # Draw background
-        cr.set_source_rgb(*AdwaitaColors.BACKGROUND)
+        # Draw background - match window background (transparent effect)
+        cr.set_source_rgba(*AdwaitaColors.BACKGROUND, 0.0)
+        cr.set_operator(cairo.OPERATOR_CLEAR)
         cr.paint()
+        cr.set_operator(cairo.OPERATOR_OVER)
 
         # Draw subtle grid lines
         cr.set_source_rgba(*AdwaitaColors.GRAY_3, 0.3)
@@ -280,13 +282,13 @@ class ModernHistogramChart(Gtk.DrawingArea):
 
         # Draw legend with rounded rectangles
         legend_x = margin_left + plot_width - 160
-        legend_y = margin_top + 15
+        legend_y = margin_top + 5
 
-        # Legend background
+        # Legend background - subtle translucent card
         self._draw_rounded_rect(cr, legend_x - 10, legend_y - 8, 150, 45, 8)
-        cr.set_source_rgba(*AdwaitaColors.BACKGROUND, 0.95)
+        cr.set_source_rgba(1.0, 1.0, 1.0, 0.85)
         cr.fill_preserve()
-        cr.set_source_rgba(*AdwaitaColors.GRAY_3, 0.5)
+        cr.set_source_rgba(*AdwaitaColors.GRAY_3, 0.3)
         cr.set_line_width(1)
         cr.stroke()
 
@@ -321,8 +323,11 @@ class ModernHistogramChart(Gtk.DrawingArea):
 
     def _draw_empty(self, cr, width, height):
         """Draw empty state."""
-        cr.set_source_rgb(*AdwaitaColors.BACKGROUND)
+        # Transparent background
+        cr.set_source_rgba(*AdwaitaColors.BACKGROUND, 0.0)
+        cr.set_operator(cairo.OPERATOR_CLEAR)
         cr.paint()
+        cr.set_operator(cairo.OPERATOR_OVER)
 
         cr.set_source_rgb(*AdwaitaColors.TEXT_SECONDARY)
         cr.select_font_face("Sans", 0, 0)
