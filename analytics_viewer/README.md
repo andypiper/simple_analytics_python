@@ -6,6 +6,21 @@ A beautiful GNOME GTK4 application for viewing your Simple Analytics data with a
 ![Adwaita](https://img.shields.io/badge/Adwaita-1-orange)
 ![Python](https://img.shields.io/badge/Python-3.12+-green)
 
+## Quick Start
+
+```bash
+# 1. Install system dependencies (Ubuntu/Debian)
+sudo apt install python3-gi gir1.2-gtk-4.0 gir1.2-adw-1
+
+# 2. Set your credentials
+export SA_API_KEY="sa_api_key_xxxx"
+export SA_USER_ID="sa_user_id_xxxx"
+
+# 3. Run from the analytics_viewer directory
+cd analytics_viewer
+python -m analytics_viewer.main
+```
+
 ## Features
 
 - 📊 **Dashboard** - Overview of pageviews, visitors, and events with ASCII charts
@@ -86,11 +101,16 @@ echo 'export SA_HOSTNAME="your-website.com"' >> ~/.bashrc
 ### Running the App
 
 ```bash
-# From anywhere (if installed)
+# From anywhere (if installed with pip)
 analytics-viewer
 
-# Or run directly
-python -m analytics_viewer.src.main
+# Or run directly from the analytics_viewer directory
+cd analytics_viewer
+python -m analytics_viewer.main
+
+# Or from the repository root
+cd /path/to/simple_analytics_python
+python -m analytics_viewer.analytics_viewer.main
 ```
 
 ### First Launch
@@ -147,11 +167,13 @@ python -m analytics_viewer.src.main
 
 ```
 analytics_viewer/
-├── src/
+├── analytics_viewer/
+│   ├── __init__.py
 │   ├── main.py           # Application entry point
 │   ├── window.py         # Main window class
 │   ├── preferences.py    # Preferences dialog
 │   └── views/
+│       ├── __init__.py
 │       ├── dashboard.py  # Dashboard view
 │       ├── events.py     # Events view
 │       ├── pages.py      # Pages view
@@ -163,8 +185,13 @@ analytics_viewer/
 ### Running in Development Mode
 
 ```bash
+# From the repository root
+cd simple_analytics_python
+python -m analytics_viewer.analytics_viewer.main
+
+# Or from the analytics_viewer directory
 cd analytics_viewer
-python -m src.main
+python -m analytics_viewer.main
 ```
 
 ### Architecture
