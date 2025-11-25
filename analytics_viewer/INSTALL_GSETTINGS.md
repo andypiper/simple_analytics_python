@@ -29,11 +29,14 @@ sudo glib-compile-schemas /usr/share/glib-2.0/schemas/
 # Check if schema is installed
 gsettings list-schemas | grep com.simpleanalytics.viewer
 
-# View current settings
-gsettings list-keys com.simpleanalytics.viewer
+# View current settings (NOTE: Due to a gsettings quirk with schemas that have a path,
+# you should use dconf commands to read/verify the actual values)
+dconf list /com/simpleanalytics/viewer/
 
-# Get a specific setting
-gsettings get com.simpleanalytics.viewer api-key
+# Get specific settings (use dconf instead of gsettings)
+dconf read /com/simpleanalytics/viewer/api-key
+dconf read /com/simpleanalytics/viewer/user-id
+dconf read /com/simpleanalytics/viewer/hostname
 ```
 
 ## Uninstall
