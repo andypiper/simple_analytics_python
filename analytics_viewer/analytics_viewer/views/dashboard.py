@@ -35,6 +35,9 @@ class DashboardView(Gtk.ScrolledWindow):
         self.main_box.set_spacing(24)
 
         # Stats cards container - use FlowBox for responsive wrapping
+        stats_clamp = Adw.Clamp()
+        stats_clamp.set_maximum_size(1200)
+
         self.stats_flowbox = Gtk.FlowBox()
         self.stats_flowbox.set_selection_mode(Gtk.SelectionMode.NONE)
         self.stats_flowbox.set_homogeneous(True)
@@ -61,7 +64,8 @@ class DashboardView(Gtk.ScrolledWindow):
         )
         self.stats_flowbox.append(self.events_card)
 
-        self.main_box.append(self.stats_flowbox)
+        stats_clamp.set_child(self.stats_flowbox)
+        self.main_box.append(stats_clamp)
 
         # Chart area - no card, blends into window background
         chart_clamp = Adw.Clamp()
