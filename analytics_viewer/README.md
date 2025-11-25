@@ -9,8 +9,16 @@ A beautiful GNOME GTK4 application for viewing your Simple Analytics data with a
 ## Quick Start
 
 ```bash
-# 1. Install system dependencies (Ubuntu/Debian)
+# 1. Install system dependencies
+
+# On Fedora (recommended):
+sudo dnf install python3-gobject gtk4 libadwaita
+
+# On Ubuntu/Debian:
 sudo apt install python3-gi gir1.2-gtk-4.0 gir1.2-adw-1
+
+# On Arch Linux:
+sudo pacman -S python-gobject gtk4 libadwaita
 
 # 2. Set your credentials
 export SA_API_KEY="sa_api_key_xxxx"
