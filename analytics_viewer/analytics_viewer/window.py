@@ -81,8 +81,11 @@ class AnalyticsWindow(Adw.ApplicationWindow):
         self.view_stack = Adw.ViewStack()
         self.view_stack.set_vexpand(True)
 
-        # Create views
-        self.dashboard_view = DashboardView()
+        # Create view stack first
+        # (views will be added after stack creation)
+
+        # Create views (pass view_stack to dashboard for navigation)
+        self.dashboard_view = DashboardView(view_stack=self.view_stack)
         self.view_stack.add_titled(
             self.dashboard_view, "dashboard", "Dashboard"
         ).set_icon_name("view-grid-symbolic")

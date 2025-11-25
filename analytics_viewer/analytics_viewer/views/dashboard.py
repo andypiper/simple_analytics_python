@@ -18,8 +18,10 @@ from ..modern_charts import ModernHistogramChart
 class DashboardView(Gtk.ScrolledWindow):
     """Main dashboard view."""
 
-    def __init__(self):
+    def __init__(self, view_stack=None):
         super().__init__()
+
+        self.view_stack = view_stack
 
         self.set_vexpand(True)
         self.set_hexpand(True)
@@ -37,21 +39,21 @@ class DashboardView(Gtk.ScrolledWindow):
         self.stats_box.set_spacing(12)
         self.stats_box.set_homogeneous(True)
 
-        # Pageviews card
+        # Pageviews card (navigates to Pages view)
         self.pageviews_card = self.create_stat_card(
-            "Pageviews", "0", "view-grid-symbolic"
+            "Pageviews", "0", "view-grid-symbolic", "pages"
         )
         self.stats_box.append(self.pageviews_card)
 
-        # Visitors card
+        # Visitors card (navigates to Countries view)
         self.visitors_card = self.create_stat_card(
-            "Visitors", "0", "system-users-symbolic"
+            "Visitors", "0", "system-users-symbolic", "countries"
         )
         self.stats_box.append(self.visitors_card)
 
-        # Events card
+        # Events card (navigates to Events view)
         self.events_card = self.create_stat_card(
-            "Events", "0", "emblem-system-symbolic"
+            "Events", "0", "emblem-system-symbolic", "events"
         )
         self.stats_box.append(self.events_card)
 
@@ -87,11 +89,23 @@ class DashboardView(Gtk.ScrolledWindow):
 
         self.set_child(clamp)
 
-    def create_stat_card(self, title, value, icon_name):
-        """Create a statistics card."""
-        card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        card.add_css_class("card")
-        card.set_spacing(12)
+    def create_stat_card(self, title, value, icon_name, view_name=None):
+        """Create a statistics card with optional navigation."""
+        # Use a button for clickable cards
+        if view_name:
+            card = Gtk.Button()
+            card.add_css_class("card")
+            card.set_has_frame(False)
+            card.connect("clicked", lambda btn: self.navigate_to_view(view_name))
+            # Add cursor pointer hint
+            card.set_cursor(Gdk.Cursor.new_from_name("pointer", None))
+        else:
+            card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+            card.add_css_class("card")
+
+        # Content box
+        content = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        content.set_spacing(12)
 
         # Header with icon
         header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
@@ -110,7 +124,13 @@ class DashboardView(Gtk.ScrolledWindow):
         title_label.set_hexpand(True)
         header.append(title_label)
 
-        card.append(header)
+        # Add navigation arrow if clickable
+        if view_name:
+            arrow = Gtk.Image.new_from_icon_name("go-next-symbolic")
+            arrow.add_css_class("dim-label")
+            header.append(arrow)
+
+        content.append(header)
 
         # Value
         value_label = Gtk.Label(label=value)
@@ -119,12 +139,22 @@ class DashboardView(Gtk.ScrolledWindow):
         value_label.set_margin_start(16)
         value_label.set_margin_end(16)
         value_label.set_margin_bottom(16)
-        card.append(value_label)
+        content.append(value_label)
 
         # Store reference to value label
-        card.value_label = value_label
+        if view_name:
+            card.set_child(content)
+            card.value_label = value_label
+        else:
+            card.append(content)
+            card.value_label = value_label
 
         return card
+
+    def navigate_to_view(self, view_name):
+        """Navigate to a specific view."""
+        if self.view_stack:
+            self.view_stack.set_visible_child_name(view_name)
 
     def load_data(self, client, hostname, start_date, end_date):
         """Load dashboard data."""
