@@ -9,7 +9,7 @@ from gi.repository import Gtk, Adw
 
 
 class PagesView(Gtk.ScrolledWindow):
-    """Pages view."""
+    """Pages view with referrers information."""
 
     def __init__(self):
         super().__init__()
@@ -41,6 +41,24 @@ class PagesView(Gtk.ScrolledWindow):
         pages_card.set_child(pages_group)
         main_box.append(pages_card)
 
+        # Referrers expandable section
+        referrers_card = Adw.Clamp()
+        referrers_card.set_maximum_size(1200)
+
+        referrers_group = Adw.PreferencesGroup()
+        referrers_group.set_title("Traffic Sources")
+        referrers_group.set_description("Where your visitors come from")
+
+        # Referrers expander
+        self.referrers_expander = Adw.ExpanderRow()
+        self.referrers_expander.set_title("Top Referrers")
+        self.referrers_expander.set_subtitle("External and direct traffic")
+        self.referrers_expander.set_icon_name("network-workgroup-symbolic")
+        referrers_group.add(self.referrers_expander)
+
+        referrers_card.set_child(referrers_group)
+        main_box.append(referrers_card)
+
         # Clamp container
         clamp = Adw.Clamp()
         clamp.set_child(main_box)
@@ -48,18 +66,21 @@ class PagesView(Gtk.ScrolledWindow):
         self.set_child(clamp)
 
     def load_data(self, client, hostname, start_date, end_date):
-        """Load pages data."""
+        """Load pages and referrers data."""
         try:
             stats = client.stats.get(
                 hostname,
                 start=start_date,
                 end=end_date,
-                fields=["pages"],
+                fields=["pages", "referrers"],
                 limit=100
             )
 
             pages = stats.get("pages", [])
             self.update_pages_list(pages)
+
+            referrers = stats.get("referrers", [])
+            self.update_referrers(referrers)
 
         except Exception as e:
             print(f"Error loading pages data: {e}")
@@ -102,3 +123,37 @@ class PagesView(Gtk.ScrolledWindow):
             row.add_suffix(chevron)
 
             self.pages_list.append(row)
+
+    def update_referrers(self, referrers):
+        """Update referrers expander."""
+        # Clear existing rows
+        while self.referrers_expander.get_first_child():
+            child = self.referrers_expander.get_first_child()
+            self.referrers_expander.remove(child)
+
+        if not referrers:
+            return
+
+        for i, referrer in enumerate(referrers[:20]):
+            value = referrer.get("value", "(direct)")
+            pageviews = referrer.get("pageviews", 0)
+
+            row = Adw.ActionRow()
+            row.set_title(value if value else "(direct)")
+            row.set_subtitle(f"{pageviews:,} pageviews")
+
+            # Add rank
+            rank_label = Gtk.Label(label=f"#{i + 1}")
+            rank_label.add_css_class("dim-label")
+            rank_label.set_width_chars(4)
+            row.add_prefix(rank_label)
+
+            # Add icon based on referrer type
+            if not value or value == "(direct)":
+                icon = Gtk.Image.new_from_icon_name("user-home-symbolic")
+            else:
+                icon = Gtk.Image.new_from_icon_name("network-workgroup-symbolic")
+            icon.add_css_class("dim-label")
+            row.add_prefix(icon)
+
+            self.referrers_expander.add_row(row)

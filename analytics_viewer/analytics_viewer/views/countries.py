@@ -46,7 +46,7 @@ def country_code_to_flag(country_code: str) -> str:
 
 
 class CountriesView(Gtk.ScrolledWindow):
-    """Countries view."""
+    """Countries view with devices information."""
 
     def __init__(self):
         super().__init__()
@@ -78,6 +78,38 @@ class CountriesView(Gtk.ScrolledWindow):
         countries_card.set_child(countries_group)
         main_box.append(countries_card)
 
+        # Devices expandable row
+        devices_card = Adw.Clamp()
+        devices_card.set_maximum_size(1200)
+
+        devices_group = Adw.PreferencesGroup()
+        devices_group.set_title("Devices & Browsers")
+        devices_group.set_description("Device types, browsers, and operating systems")
+
+        # Device types expander
+        self.device_types_expander = Adw.ExpanderRow()
+        self.device_types_expander.set_title("Device Types")
+        self.device_types_expander.set_subtitle("Desktop, mobile, and tablet")
+        self.device_types_expander.set_icon_name("computer-symbolic")
+        devices_group.add(self.device_types_expander)
+
+        # Browsers expander
+        self.browsers_expander = Adw.ExpanderRow()
+        self.browsers_expander.set_title("Browsers")
+        self.browsers_expander.set_subtitle("Top web browsers")
+        self.browsers_expander.set_icon_name("web-browser-symbolic")
+        devices_group.add(self.browsers_expander)
+
+        # Operating systems expander
+        self.os_expander = Adw.ExpanderRow()
+        self.os_expander.set_title("Operating Systems")
+        self.os_expander.set_subtitle("Desktop and mobile OS")
+        self.os_expander.set_icon_name("system-run-symbolic")
+        devices_group.add(self.os_expander)
+
+        devices_card.set_child(devices_group)
+        main_box.append(devices_card)
+
         # Clamp container
         clamp = Adw.Clamp()
         clamp.set_child(main_box)
@@ -85,23 +117,32 @@ class CountriesView(Gtk.ScrolledWindow):
         self.set_child(clamp)
 
     def load_data(self, client, hostname, start_date, end_date):
-        """Load countries data."""
+        """Load countries and devices data."""
         try:
+            # Get countries data
             stats = client.stats.get(
                 hostname,
                 start=start_date,
                 end=end_date,
-                fields=["countries"],
+                fields=["countries", "device_types", "browser_names", "os_names"],
                 limit=100
             )
 
             countries = stats.get("countries", [])
             total_pageviews = sum(c.get("pageviews", 0) for c in countries)
-
             self.update_countries_list(countries, total_pageviews)
 
+            # Load devices data
+            device_types = stats.get("device_types", [])
+            browsers = stats.get("browser_names", [])
+            operating_systems = stats.get("os_names", [])
+
+            self.update_device_types(device_types)
+            self.update_browsers(browsers)
+            self.update_os(operating_systems)
+
         except Exception as e:
-            print(f"Error loading countries data: {e}")
+            print(f"Error loading data: {e}")
 
     def update_countries_list(self, countries, total_pageviews):
         """Update the countries list."""
@@ -151,3 +192,93 @@ class CountriesView(Gtk.ScrolledWindow):
             row.add_suffix(progress)
 
             self.countries_list.append(row)
+
+    def update_device_types(self, device_types):
+        """Update device types expander."""
+        # Clear existing rows
+        while self.device_types_expander.get_first_child():
+            child = self.device_types_expander.get_first_child()
+            self.device_types_expander.remove(child)
+
+        if not device_types:
+            return
+
+        total = sum(dt.get("pageviews", 0) for dt in device_types)
+
+        for device_type in device_types:
+            value = device_type.get("value", "Unknown")
+            pageviews = device_type.get("pageviews", 0)
+            percentage = (pageviews / total * 100) if total > 0 else 0
+
+            row = Adw.ActionRow()
+            row.set_title(value)
+            row.set_subtitle(f"{pageviews:,} pageviews ({percentage:.1f}%)")
+
+            # Add progress bar
+            progress = Gtk.ProgressBar()
+            progress.set_fraction(percentage / 100)
+            progress.set_valign(Gtk.Align.CENTER)
+            progress.set_size_request(100, -1)
+            row.add_suffix(progress)
+
+            self.device_types_expander.add_row(row)
+
+    def update_browsers(self, browsers):
+        """Update browsers expander."""
+        # Clear existing rows
+        while self.browsers_expander.get_first_child():
+            child = self.browsers_expander.get_first_child()
+            self.browsers_expander.remove(child)
+
+        if not browsers:
+            return
+
+        total = sum(b.get("pageviews", 0) for b in browsers)
+
+        for i, browser in enumerate(browsers[:10]):
+            value = browser.get("value", "Unknown")
+            pageviews = browser.get("pageviews", 0)
+            percentage = (pageviews / total * 100) if total > 0 else 0
+
+            row = Adw.ActionRow()
+            row.set_title(f"#{i + 1} {value}")
+            row.set_subtitle(f"{pageviews:,} pageviews ({percentage:.1f}%)")
+
+            # Add progress bar
+            progress = Gtk.ProgressBar()
+            progress.set_fraction(percentage / 100)
+            progress.set_valign(Gtk.Align.CENTER)
+            progress.set_size_request(100, -1)
+            row.add_suffix(progress)
+
+            self.browsers_expander.add_row(row)
+
+    def update_os(self, operating_systems):
+        """Update operating systems expander."""
+        # Clear existing rows
+        while self.os_expander.get_first_child():
+            child = self.os_expander.get_first_child()
+            self.os_expander.remove(child)
+
+        if not operating_systems:
+            return
+
+        total = sum(os.get("pageviews", 0) for os in operating_systems)
+
+        for i, os_entry in enumerate(operating_systems[:10]):
+            value = os_entry.get("value", "Unknown")
+            pageviews = os_entry.get("pageviews", 0)
+            percentage = (pageviews / total * 100) if total > 0 else 0
+
+            row = Adw.ActionRow()
+            row.set_title(f"#{i + 1} {value}")
+            row.set_subtitle(f"{pageviews:,} pageviews ({percentage:.1f}%)")
+
+            # Add progress bar
+            progress = Gtk.ProgressBar()
+            progress.set_fraction(percentage / 100)
+            progress.set_valign(Gtk.Align.CENTER)
+            progress.set_size_request(100, -1)
+            row.add_suffix(progress)
+
+            self.os_expander.add_row(row)

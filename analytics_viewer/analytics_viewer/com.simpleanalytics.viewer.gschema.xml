@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="com.simpleanalytics.viewer" path="/com/simpleanalytics/viewer/">
+    <key name="api-key" type="s">
+      <default>''</default>
+      <summary>Simple Analytics API Key</summary>
+      <description>The API key for authenticating with Simple Analytics</description>
+    </key>
+    <key name="user-id" type="s">
+      <default>''</default>
+      <summary>Simple Analytics User ID</summary>
+      <description>The user ID for authenticating with Simple Analytics</description>
+    </key>
+    <key name="hostname" type="s">
+      <default>''</default>
+      <summary>Default hostname</summary>
+      <description>The last selected hostname</description>
+    </key>
+  </schema>
+</schemalist>

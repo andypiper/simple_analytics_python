@@ -34,30 +34,34 @@ class DashboardView(Gtk.ScrolledWindow):
         self.main_box.set_margin_end(24)
         self.main_box.set_spacing(24)
 
-        # Stats cards container
-        self.stats_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
-        self.stats_box.set_spacing(12)
-        self.stats_box.set_homogeneous(True)
+        # Stats cards container - use FlowBox for responsive wrapping
+        self.stats_flowbox = Gtk.FlowBox()
+        self.stats_flowbox.set_selection_mode(Gtk.SelectionMode.NONE)
+        self.stats_flowbox.set_homogeneous(True)
+        self.stats_flowbox.set_max_children_per_line(3)
+        self.stats_flowbox.set_min_children_per_line(1)
+        self.stats_flowbox.set_column_spacing(12)
+        self.stats_flowbox.set_row_spacing(12)
 
         # Pageviews card (navigates to Pages view)
         self.pageviews_card = self.create_stat_card(
             "Pageviews", "0", "view-grid-symbolic", "pages"
         )
-        self.stats_box.append(self.pageviews_card)
+        self.stats_flowbox.append(self.pageviews_card)
 
         # Visitors card (navigates to Countries view)
         self.visitors_card = self.create_stat_card(
             "Visitors", "0", "system-users-symbolic", "countries"
         )
-        self.stats_box.append(self.visitors_card)
+        self.stats_flowbox.append(self.visitors_card)
 
         # Events card (navigates to Events view)
         self.events_card = self.create_stat_card(
             "Events", "0", "emblem-system-symbolic", "events"
         )
-        self.stats_box.append(self.events_card)
+        self.stats_flowbox.append(self.events_card)
 
-        self.main_box.append(self.stats_box)
+        self.main_box.append(self.stats_flowbox)
 
         # Chart area - no card, blends into window background
         chart_clamp = Adw.Clamp()

@@ -15,8 +15,6 @@ from .views.dashboard import DashboardView
 from .views.events import EventsView
 from .views.pages import PagesView
 from .views.countries import CountriesView
-from .views.referrers import ReferrersView
-from .views.devices import DevicesView
 from .preferences import PreferencesDialog
 from .shortcuts import create_shortcuts_window
 
@@ -32,10 +30,23 @@ class AnalyticsWindow(Adw.ApplicationWindow):
         self.set_size_request(360, 360)  # GNOME HIG minimum
         self.set_title("Simple Analytics Viewer")
 
-        # Load credentials from environment
-        self.api_key = os.environ.get("SA_API_KEY", "")
-        self.user_id = os.environ.get("SA_USER_ID", "")
-        self.hostname = os.environ.get("SA_HOSTNAME", "")
+        # Initialize GSettings for credential persistence
+        try:
+            self.settings = Gio.Settings.new("com.simpleanalytics.viewer")
+        except:
+            # Fallback if schema not installed
+            self.settings = None
+            print("Warning: GSettings schema not installed, credentials won't persist")
+
+        # Load credentials from GSettings or environment
+        if self.settings:
+            self.api_key = self.settings.get_string("api-key") or os.environ.get("SA_API_KEY", "")
+            self.user_id = self.settings.get_string("user-id") or os.environ.get("SA_USER_ID", "")
+            self.hostname = self.settings.get_string("hostname") or os.environ.get("SA_HOSTNAME", "")
+        else:
+            self.api_key = os.environ.get("SA_API_KEY", "")
+            self.user_id = os.environ.get("SA_USER_ID", "")
+            self.hostname = os.environ.get("SA_HOSTNAME", "")
 
         self.client = None
         self.websites = []
@@ -88,8 +99,6 @@ class AnalyticsWindow(Adw.ApplicationWindow):
         view_menu.append("Events", "win.view-events")
         view_menu.append("Pages", "win.view-pages")
         view_menu.append("Countries", "win.view-countries")
-        view_menu.append("Referrers", "win.view-referrers")
-        view_menu.append("Devices", "win.view-devices")
         menu.append_submenu("View", view_menu)
 
         # Actions section
@@ -142,16 +151,6 @@ class AnalyticsWindow(Adw.ApplicationWindow):
             self.countries_view, "countries", "Countries"
         ).set_icon_name("mark-location-symbolic")
 
-        self.referrers_view = ReferrersView()
-        self.view_stack.add_titled(
-            self.referrers_view, "referrers", "Referrers"
-        ).set_icon_name("network-workgroup-symbolic")
-
-        self.devices_view = DevicesView()
-        self.view_stack.add_titled(
-            self.devices_view, "devices", "Devices"
-        ).set_icon_name("computer-symbolic")
-
         # View switcher bar
         view_switcher = Adw.ViewSwitcher()
         view_switcher.set_stack(self.view_stack)
@@ -203,14 +202,12 @@ class AnalyticsWindow(Adw.ApplicationWindow):
         self.add_action(shortcuts_action)
         self.get_application().set_accels_for_action("win.show-help-overlay", ["<Ctrl>question"])
 
-        # View switching actions
+        # View switching actions (4 views only)
         view_actions = [
             ("view-dashboard", "dashboard", ["<Ctrl>1", "<Alt>1"]),
             ("view-events", "events", ["<Ctrl>2", "<Alt>2"]),
             ("view-pages", "pages", ["<Ctrl>3", "<Alt>3"]),
             ("view-countries", "countries", ["<Ctrl>4", "<Alt>4"]),
-            ("view-referrers", "referrers", ["<Ctrl>5", "<Alt>5"]),
-            ("view-devices", "devices", ["<Ctrl>6", "<Alt>6"]),
         ]
 
         for action_name, view_name, accels in view_actions:
@@ -422,12 +419,6 @@ class AnalyticsWindow(Adw.ApplicationWindow):
             self.countries_view.load_data(
                 self.client, self.hostname, start_date, end_date
             )
-            self.referrers_view.load_data(
-                self.client, self.hostname, start_date, end_date
-            )
-            self.devices_view.load_data(
-                self.client, self.hostname, start_date, end_date
-            )
 
         except Exception as e:
             import traceback
@@ -445,6 +436,12 @@ class AnalyticsWindow(Adw.ApplicationWindow):
         self.api_key = api_key
         self.user_id = user_id
         self.hostname = hostname
+
+        # Save to GSettings for persistence
+        if self.settings:
+            self.settings.set_string("api-key", api_key)
+            self.settings.set_string("user-id", user_id)
+            self.settings.set_string("hostname", hostname)
 
         # Save to environment (for session only)
         os.environ["SA_API_KEY"] = api_key

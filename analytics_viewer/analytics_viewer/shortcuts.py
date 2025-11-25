@@ -46,18 +46,6 @@ def create_shortcuts_window(parent):
                 <property name="accelerator">&lt;Control&gt;4</property>
               </object>
             </child>
-            <child>
-              <object class="GtkShortcutsShortcut">
-                <property name="title" translatable="yes" context="shortcut window">Referrers</property>
-                <property name="accelerator">&lt;Control&gt;5</property>
-              </object>
-            </child>
-            <child>
-              <object class="GtkShortcutsShortcut">
-                <property name="title" translatable="yes" context="shortcut window">Devices</property>
-                <property name="accelerator">&lt;Control&gt;6</property>
-              </object>
-            </child>
           </object>
         </child>
         <child>
