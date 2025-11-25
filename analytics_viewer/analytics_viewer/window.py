@@ -59,10 +59,14 @@ class AnalyticsWindow(Adw.ApplicationWindow):
             saved_user_id = self.settings.get_string("user-id")
             saved_hostname = self.settings.get_string("hostname")
 
+            print(f"__init__: Read from GSettings: hostname='{saved_hostname}'")
+
             # Use saved values or fall back to env vars
             self.api_key = saved_api_key or os.environ.get("SA_API_KEY", "")
             self.user_id = saved_user_id or os.environ.get("SA_USER_ID", "")
             self.hostname = saved_hostname or os.environ.get("SA_HOSTNAME", "")
+
+            print(f"__init__: Final hostname after fallback: '{self.hostname}'")
 
             # If we got values from env vars, save them to GSettings for next time
             if not saved_api_key and self.api_key:
@@ -390,14 +394,21 @@ class AnalyticsWindow(Adw.ApplicationWindow):
 
             # Select the saved hostname or fall back to first website
             selected_index = 0  # Default to first
+            print(f"authenticate: self.hostname = '{self.hostname}'")
+            print(f"authenticate: Available websites: {[w.get('hostname') for w in self.websites if isinstance(w, dict)]}")
+
             if self.hostname:
                 # Try to find the saved hostname
                 for i, website in enumerate(self.websites):
                     if isinstance(website, dict) and website.get("hostname") == self.hostname:
                         selected_index = i
+                        print(f"authenticate: Found saved hostname at index {i}")
                         break
+                else:
+                    print(f"authenticate: Saved hostname '{self.hostname}' not found in website list")
                 # If not found, keep selected_index = 0 but don't change saved hostname
             else:
+                print(f"authenticate: No saved hostname, using first website")
                 # No saved hostname, use first website and save it
                 if self.websites and isinstance(self.websites[0], dict):
                     self.hostname = self.websites[0].get("hostname", "")
