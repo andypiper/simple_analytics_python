@@ -15,6 +15,8 @@ from .views.dashboard import DashboardView
 from .views.events import EventsView
 from .views.pages import PagesView
 from .views.countries import CountriesView
+from .views.referrers import ReferrersView
+from .views.devices import DevicesView
 from .preferences import PreferencesDialog
 
 
@@ -61,6 +63,12 @@ class AnalyticsWindow(Adw.ApplicationWindow):
         refresh_button.connect("clicked", self.on_refresh_clicked)
         self.header_bar.pack_end(refresh_button)
 
+        # Export button
+        export_button = Gtk.Button(icon_name="document-save-symbolic")
+        export_button.set_tooltip_text("Export data")
+        export_button.connect("clicked", self.on_export_clicked)
+        self.header_bar.pack_end(export_button)
+
         # Menu button
         menu_button = Gtk.MenuButton()
         menu_button.set_icon_name("open-menu-symbolic")
@@ -104,6 +112,16 @@ class AnalyticsWindow(Adw.ApplicationWindow):
         self.view_stack.add_titled(
             self.countries_view, "countries", "Countries"
         ).set_icon_name("mark-location-symbolic")
+
+        self.referrers_view = ReferrersView()
+        self.view_stack.add_titled(
+            self.referrers_view, "referrers", "Referrers"
+        ).set_icon_name("network-workgroup-symbolic")
+
+        self.devices_view = DevicesView()
+        self.view_stack.add_titled(
+            self.devices_view, "devices", "Devices"
+        ).set_icon_name("computer-symbolic")
 
         # View switcher bar
         view_switcher = Adw.ViewSwitcher()
@@ -225,6 +243,80 @@ class AnalyticsWindow(Adw.ApplicationWindow):
         """Handle refresh button click."""
         self.load_data()
 
+    def on_export_clicked(self, button):
+        """Handle export button click."""
+        if not self.client or not self.hostname:
+            self.show_error("No data to export. Please select a website first.")
+            return
+
+        # Create file chooser dialog
+        dialog = Gtk.FileDialog()
+        dialog.set_title("Export Analytics Data")
+        dialog.set_initial_name(f"{self.hostname}_analytics.csv")
+
+        # Set up filters
+        csv_filter = Gtk.FileFilter()
+        csv_filter.set_name("CSV Files")
+        csv_filter.add_pattern("*.csv")
+
+        filter_list = Gio.ListStore.new(Gtk.FileFilter)
+        filter_list.append(csv_filter)
+        dialog.set_filters(filter_list)
+
+        # Show save dialog
+        dialog.save(self, None, self.on_export_file_selected)
+
+    def on_export_file_selected(self, dialog, result):
+        """Handle file selection for export."""
+        try:
+            file = dialog.save_finish(result)
+            if file:
+                file_path = file.get_path()
+                self.export_data_to_file(file_path)
+        except Exception as e:
+            if "dismissed" not in str(e).lower():
+                self.show_error(f"Export failed: {str(e)}")
+
+    def export_data_to_file(self, file_path):
+        """Export data to CSV file."""
+        try:
+            # Calculate date range (last 30 days)
+            end_date = datetime.now().strftime("%Y-%m-%d")
+            start_date = (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d")
+
+            # Use the Export API to get CSV data
+            csv_data = self.client.export.get_csv(
+                self.hostname,
+                start=start_date,
+                end=end_date,
+                fields=[
+                    "pageviews",
+                    "visitors",
+                    "pages",
+                    "referrers",
+                    "countries",
+                    "browser_names",
+                    "os_names",
+                    "device_types",
+                ],
+            )
+
+            # Write to file
+            with open(file_path, "w") as f:
+                f.write(csv_data)
+
+            # Show success message
+            dialog = Adw.MessageDialog.new(self)
+            dialog.set_heading("Export Successful")
+            dialog.set_body(f"Data exported to:\n{file_path}")
+            dialog.add_response("ok", "OK")
+            dialog.present()
+
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            self.show_error(f"Export failed: {str(e)}")
+
     def load_data(self):
         """Load analytics data for the selected website."""
         if not self.client:
@@ -253,6 +345,12 @@ class AnalyticsWindow(Adw.ApplicationWindow):
                 self.client, self.hostname, start_date, end_date
             )
             self.countries_view.load_data(
+                self.client, self.hostname, start_date, end_date
+            )
+            self.referrers_view.load_data(
+                self.client, self.hostname, start_date, end_date
+            )
+            self.devices_view.load_data(
                 self.client, self.hostname, start_date, end_date
             )
 
