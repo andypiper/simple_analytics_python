@@ -23,13 +23,15 @@ python -m analytics_viewer.main
 
 ## Features
 
-- 📊 **Dashboard** - Overview of pageviews, visitors, and events with ASCII charts
+- 📊 **Dashboard** - Overview of pageviews, visitors, and events with **native Cairo-rendered charts**
+- 📈 **Beautiful Charts** - Smooth line charts using GTK's Cairo drawing (no external dependencies!)
 - 🎯 **Events Tracking** - View custom and automated events (outbound links, downloads, email clicks)
 - 📄 **Pages Analytics** - Detailed breakdown of page performance
 - 🌍 **Geographic Data** - Country-wise visitor breakdown with flag emojis
 - 🎨 **Beautiful UI** - Native GNOME Adwaita design that fits perfectly with your desktop
 - 🔐 **Secure** - Credentials stored in environment variables
 - 🔄 **Real-time Refresh** - Update your data with a single click
+- 🚀 **Easy Development** - No installation needed, runs directly from source
 
 ## Screenshots
 

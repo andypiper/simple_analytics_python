@@ -6,6 +6,15 @@ A beautiful Adwaita-styled application for viewing your Simple Analytics data.
 """
 
 import sys
+import os
+from pathlib import Path
+
+# Add parent directory to path for development (so simple_analytics can be imported)
+# This allows running the app without installing the simple_analytics package
+repo_root = Path(__file__).parent.parent.parent
+if repo_root.exists() and (repo_root / "simple_analytics").exists():
+    sys.path.insert(0, str(repo_root))
+
 import gi
 
 gi.require_version("Gtk", "4.0")

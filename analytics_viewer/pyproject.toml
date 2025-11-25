@@ -8,6 +8,7 @@ dependencies = [
     "pygobject>=3.46.0",
     "simple-analytics-python @ file://../",
     "matplotlib>=3.8.0",
+    "pillow>=10.0.0",
 ]
 
 [project.scripts]

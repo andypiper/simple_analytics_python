@@ -8,6 +8,8 @@ gi.require_version("Adw", "1")
 
 from gi.repository import Gtk, Adw
 
+from ..cairo_charts import HistogramChart, HorizontalBarChart
+
 
 class DashboardView(Gtk.ScrolledWindow):
     """Main dashboard view."""
@@ -58,33 +60,15 @@ class DashboardView(Gtk.ScrolledWindow):
         chart_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         chart_box.add_css_class("card")
         chart_box.set_spacing(12)
+        chart_box.set_margin_top(16)
+        chart_box.set_margin_bottom(16)
+        chart_box.set_margin_start(16)
+        chart_box.set_margin_end(16)
 
-        chart_header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
-        chart_header.set_margin_top(16)
-        chart_header.set_margin_start(16)
-        chart_header.set_margin_end(16)
+        # Native Cairo chart widget
+        self.histogram_chart = HistogramChart()
 
-        chart_title = Gtk.Label(label="Pageviews Over Time")
-        chart_title.add_css_class("title-3")
-        chart_title.set_halign(Gtk.Align.START)
-        chart_header.append(chart_title)
-
-        chart_box.append(chart_header)
-
-        # Chart area (will show ASCII art chart)
-        self.chart_text = Gtk.TextView()
-        self.chart_text.set_editable(False)
-        self.chart_text.set_monospace(True)
-        self.chart_text.set_margin_start(16)
-        self.chart_text.set_margin_end(16)
-        self.chart_text.set_margin_bottom(16)
-        self.chart_text.set_wrap_mode(Gtk.WrapMode.NONE)
-
-        chart_scroll = Gtk.ScrolledWindow()
-        chart_scroll.set_min_content_height(300)
-        chart_scroll.set_child(self.chart_text)
-
-        chart_box.append(chart_scroll)
+        chart_box.append(self.histogram_chart)
 
         chart_card.set_child(chart_box)
         self.main_box.append(chart_card)
@@ -180,50 +164,17 @@ class DashboardView(Gtk.ScrolledWindow):
             except:
                 self.events_card.value_label.set_text("N/A")
 
-            # Draw histogram chart
-            self.draw_histogram(stats.get("histogram", []))
+            # Update histogram chart with native Cairo rendering
+            histogram = stats.get("histogram", [])
+            if histogram:
+                # Use last 30 days
+                self.histogram_chart.set_data(histogram[-30:])
 
             # Update pages list
             self.update_pages_list(stats.get("pages", []))
 
         except Exception as e:
             print(f"Error loading dashboard data: {e}")
-
-    def draw_histogram(self, histogram):
-        """Draw an ASCII histogram."""
-        if not histogram:
-            buffer = self.chart_text.get_buffer()
-            buffer.set_text("No data available")
-            return
-
-        # Get last 30 days
-        recent = histogram[-30:]
-
-        # Find max value for scaling
-        max_value = max(p.get("pageviews", 0) for p in recent)
-
-        if max_value == 0:
-            buffer = self.chart_text.get_buffer()
-            buffer.set_text("No data available")
-            return
-
-        # Build chart
-        lines = []
-        lines.append("Pageviews per day (last 30 days)")
-        lines.append("")
-
-        for point in recent:
-            date = point.get("date", "")
-            pageviews = point.get("pageviews", 0)
-
-            # Scale bar
-            bar_length = int((pageviews / max_value) * 50)
-            bar = "█" * bar_length
-
-            lines.append(f"{date}  {pageviews:>6,}  {bar}")
-
-        buffer = self.chart_text.get_buffer()
-        buffer.set_text("\n".join(lines))
 
     def update_pages_list(self, pages):
         """Update the top pages list."""
