@@ -18,6 +18,7 @@ from .views.countries import CountriesView
 from .views.referrers import ReferrersView
 from .views.devices import DevicesView
 from .preferences import PreferencesDialog
+from .shortcuts import create_shortcuts_window
 
 
 class AnalyticsWindow(Adw.ApplicationWindow):
@@ -28,6 +29,7 @@ class AnalyticsWindow(Adw.ApplicationWindow):
 
         # Set window properties
         self.set_default_size(1200, 800)
+        self.set_size_request(360, 360)  # GNOME HIG minimum
         self.set_title("Simple Analytics Viewer")
 
         # Load credentials from environment
@@ -40,6 +42,9 @@ class AnalyticsWindow(Adw.ApplicationWindow):
 
         # Create UI
         self.setup_ui()
+
+        # Setup actions and keyboard shortcuts
+        self.setup_actions()
 
         # Check authentication
         if self.api_key and self.user_id:
@@ -72,10 +77,34 @@ class AnalyticsWindow(Adw.ApplicationWindow):
         # Menu button
         menu_button = Gtk.MenuButton()
         menu_button.set_icon_name("open-menu-symbolic")
+        menu_button.set_tooltip_text("Main Menu")
 
+        # Build primary menu
         menu = Gio.Menu()
-        menu.append("Preferences", "app.preferences")
-        menu.append("About", "app.about")
+
+        # View submenu
+        view_menu = Gio.Menu()
+        view_menu.append("Dashboard", "win.view-dashboard")
+        view_menu.append("Events", "win.view-events")
+        view_menu.append("Pages", "win.view-pages")
+        view_menu.append("Countries", "win.view-countries")
+        view_menu.append("Referrers", "win.view-referrers")
+        view_menu.append("Devices", "win.view-devices")
+        menu.append_submenu("View", view_menu)
+
+        # Actions section
+        actions_section = Gio.Menu()
+        actions_section.append("Refresh", "win.refresh")
+        actions_section.append("Export…", "win.export")
+        menu.append_section(None, actions_section)
+
+        # App section
+        app_section = Gio.Menu()
+        app_section.append("Preferences", "app.preferences")
+        app_section.append("Keyboard Shortcuts", "win.show-help-overlay")
+        app_section.append("About", "app.about")
+        menu.append_section(None, app_section)
+
         menu.append("Quit", "app.quit")
 
         menu_button.set_menu_model(menu)
@@ -129,29 +158,75 @@ class AnalyticsWindow(Adw.ApplicationWindow):
         view_switcher.set_policy(Adw.ViewSwitcherPolicy.WIDE)
 
         # View switcher title (for narrow layouts)
-        view_switcher_title = Adw.ViewSwitcherTitle()
-        view_switcher_title.set_stack(self.view_stack)
-        view_switcher_title.set_title("Simple Analytics")
-        self.header_bar.set_title_widget(view_switcher_title)
+        self.view_switcher_title = Adw.ViewSwitcherTitle()
+        self.view_switcher_title.set_stack(self.view_stack)
+        self.view_switcher_title.set_title("Simple Analytics")
+        self.header_bar.set_title_widget(self.view_switcher_title)
 
         # Bottom bar for narrow mode
-        view_switcher_bar = Adw.ViewSwitcherBar()
-        view_switcher_bar.set_stack(self.view_stack)
+        self.view_switcher_bar = Adw.ViewSwitcherBar()
+        self.view_switcher_bar.set_stack(self.view_stack)
 
-        # Bind view switcher to window width
-        self.bind_property(
-            "default-width",
-            view_switcher_bar,
+        # Bind view switcher title visibility to bar reveal
+        # When title is not visible (wide mode), hide the bar
+        # When title is visible (narrow mode), show the bar
+        self.view_switcher_title.bind_property(
+            "title-visible",
+            self.view_switcher_bar,
             "reveal",
             GObject.BindingFlags.SYNC_CREATE,
-            lambda binding, width: width < 600,
         )
 
         # Add to toolbar
         self.toolbox.set_content(self.view_stack)
-        self.toolbox.add_bottom_bar(view_switcher_bar)
+        self.toolbox.add_bottom_bar(self.view_switcher_bar)
 
         self.set_content(self.toolbox)
+
+    def setup_actions(self):
+        """Set up window actions and keyboard shortcuts."""
+        # Refresh action
+        refresh_action = Gio.SimpleAction.new("refresh", None)
+        refresh_action.connect("activate", lambda a, p: self.on_refresh_clicked(None))
+        self.add_action(refresh_action)
+        self.get_application().set_accels_for_action("win.refresh", ["<Ctrl>R", "F5"])
+
+        # Export action
+        export_action = Gio.SimpleAction.new("export", None)
+        export_action.connect("activate", lambda a, p: self.on_export_clicked(None))
+        self.add_action(export_action)
+        self.get_application().set_accels_for_action("win.export", ["<Ctrl>E"])
+
+        # Keyboard shortcuts action
+        shortcuts_action = Gio.SimpleAction.new("show-help-overlay", None)
+        shortcuts_action.connect("activate", lambda a, p: self.show_shortcuts())
+        self.add_action(shortcuts_action)
+        self.get_application().set_accels_for_action("win.show-help-overlay", ["<Ctrl>question"])
+
+        # View switching actions
+        view_actions = [
+            ("view-dashboard", "dashboard", ["<Ctrl>1", "<Alt>1"]),
+            ("view-events", "events", ["<Ctrl>2", "<Alt>2"]),
+            ("view-pages", "pages", ["<Ctrl>3", "<Alt>3"]),
+            ("view-countries", "countries", ["<Ctrl>4", "<Alt>4"]),
+            ("view-referrers", "referrers", ["<Ctrl>5", "<Alt>5"]),
+            ("view-devices", "devices", ["<Ctrl>6", "<Alt>6"]),
+        ]
+
+        for action_name, view_name, accels in view_actions:
+            action = Gio.SimpleAction.new(action_name, None)
+            action.connect("activate", lambda a, p, v=view_name: self.switch_to_view(v))
+            self.add_action(action)
+            self.get_application().set_accels_for_action(f"win.{action_name}", accels)
+
+    def switch_to_view(self, view_name):
+        """Switch to a specific view."""
+        self.view_stack.set_visible_child_name(view_name)
+
+    def show_shortcuts(self):
+        """Show keyboard shortcuts window."""
+        shortcuts_window = create_shortcuts_window(self)
+        shortcuts_window.present()
 
     def show_auth_dialog(self):
         """Show authentication dialog."""
@@ -285,19 +360,19 @@ class AnalyticsWindow(Adw.ApplicationWindow):
             start_date = (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d")
 
             # Use the Export API to get CSV data
-            csv_data = self.client.export.get_csv(
+            csv_data = self.client.export.to_csv(
                 self.hostname,
                 start=start_date,
                 end=end_date,
                 fields=[
-                    "pageviews",
-                    "visitors",
-                    "pages",
-                    "referrers",
-                    "countries",
-                    "browser_names",
-                    "os_names",
-                    "device_types",
+                    "added_iso",
+                    "hostname",
+                    "path",
+                    "country_code",
+                    "device_type",
+                    "browser_name",
+                    "os_name",
+                    "referrer_hostname",
                 ],
             )
 

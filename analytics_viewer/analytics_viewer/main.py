@@ -54,6 +54,7 @@ class AnalyticsApplication(Adw.Application):
         preferences_action = Gio.SimpleAction.new("preferences", None)
         preferences_action.connect("activate", self.on_preferences)
         self.add_action(preferences_action)
+        self.set_accels_for_action("app.preferences", ["<Ctrl>comma"])
 
         about_action = Gio.SimpleAction.new("about", None)
         about_action.connect("activate", self.on_about)
