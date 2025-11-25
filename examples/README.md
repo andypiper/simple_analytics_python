@@ -34,6 +34,12 @@ uv run examples/country_chart.py
 
 # Data export (requires authentication)
 uv run examples/export_data.py
+
+# Events analytics and charts (requires authentication)
+uv run examples/events_chart.py
+
+# Event timeline analysis (requires authentication)
+uv run examples/events_timeline.py
 ```
 
 ### Running with Python
@@ -101,6 +107,30 @@ Data export demonstration showing:
 - Export with detailed fields
 - Save exports to files
 - Export events
+
+**Note:** This example requires authentication.
+
+### `events_chart.py`
+Event analytics with terminal visualization showing:
+- Event breakdown by type (automated vs custom)
+- Bar charts for top events
+- Event type comparison charts
+- Detailed event tables with counts
+- Automated event analysis (outbound links, email clicks, downloads)
+- Custom event tracking
+
+Uses the `plotext` library for terminal-based charts.
+
+**Note:** This example requires authentication.
+
+### `events_timeline.py`
+Event timeline and trend analysis showing:
+- Raw event data export and analysis
+- Timeline of event occurrences
+- Daily event counts with ASCII charts
+- Recent events log
+- Automated event breakdown by type
+- Device and country breakdown for events
 
 **Note:** This example requires authentication.
 
