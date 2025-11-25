@@ -83,13 +83,3 @@ class PreferencesDialog(Adw.PreferencesWindow):
 
         self.emit("credentials-updated", api_key, user_id, hostname)
         self.close()
-
-
-# Register signal
-GObject.signal_new(
-    "credentials-updated",
-    PreferencesDialog,
-    GObject.SignalFlags.RUN_FIRST,
-    None,
-    (str, str, str),
-)
