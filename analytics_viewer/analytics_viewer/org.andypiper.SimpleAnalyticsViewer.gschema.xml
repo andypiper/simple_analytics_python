@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schemalist>
-  <schema id="com.simpleanalytics.viewer" path="/com/simpleanalytics/viewer/">
+  <schema id="org.andypiper.SimpleAnalyticsViewer" path="/org/andypiper/simpleanalytics/">
     <key name="api-key" type="s">
       <default>''</default>
       <summary>Simple Analytics API Key</summary>

@@ -9,7 +9,7 @@ Install the schema for your user only (no sudo required):
 ```bash
 # From the analytics_viewer directory
 mkdir -p ~/.local/share/glib-2.0/schemas/
-cp analytics_viewer/com.simpleanalytics.viewer.gschema.xml ~/.local/share/glib-2.0/schemas/
+cp analytics_viewer/org.andypiper.SimpleAnalyticsViewer.gschema.xml ~/.local/share/glib-2.0/schemas/
 glib-compile-schemas ~/.local/share/glib-2.0/schemas/
 ```
 
@@ -19,7 +19,7 @@ Install system-wide (requires sudo):
 
 ```bash
 # From the analytics_viewer directory
-sudo cp analytics_viewer/com.simpleanalytics.viewer.gschema.xml /usr/share/glib-2.0/schemas/
+sudo cp analytics_viewer/org.andypiper.SimpleAnalyticsViewer.gschema.xml /usr/share/glib-2.0/schemas/
 sudo glib-compile-schemas /usr/share/glib-2.0/schemas/
 ```
 
@@ -27,29 +27,45 @@ sudo glib-compile-schemas /usr/share/glib-2.0/schemas/
 
 ```bash
 # Check if schema is installed
-gsettings list-schemas | grep com.simpleanalytics.viewer
+gsettings list-schemas | grep org.andypiper.SimpleAnalyticsViewer
 
-# View current settings (NOTE: Due to a gsettings quirk with schemas that have a path,
-# you should use dconf commands to read/verify the actual values)
-dconf list /com/simpleanalytics/viewer/
+# View current settings (use dconf commands to read/verify the actual values)
+dconf list /org/andypiper/simpleanalytics/
 
-# Get specific settings (use dconf instead of gsettings)
-dconf read /com/simpleanalytics/viewer/api-key
-dconf read /com/simpleanalytics/viewer/user-id
-dconf read /com/simpleanalytics/viewer/hostname
+# Get specific settings
+dconf read /org/andypiper/simpleanalytics/api-key
+dconf read /org/andypiper/simpleanalytics/user-id
+dconf read /org/andypiper/simpleanalytics/hostname
+```
+
+## Migrating from Old Schema
+
+If you were using the old `com.simpleanalytics.viewer` schema, the app will automatically migrate your settings. To clean up the old schema:
+
+```bash
+# Remove old values from dconf
+dconf reset -f /com/simpleanalytics/viewer/
+
+# Remove old schema file (user install)
+rm ~/.local/share/glib-2.0/schemas/com.simpleanalytics.viewer.gschema.xml
+glib-compile-schemas ~/.local/share/glib-2.0/schemas/
+
+# Or for system install (requires sudo)
+sudo rm /usr/share/glib-2.0/schemas/com.simpleanalytics.viewer.gschema.xml
+sudo glib-compile-schemas /usr/share/glib-2.0/schemas/
 ```
 
 ## Uninstall
 
 User install:
 ```bash
-rm ~/.local/share/glib-2.0/schemas/com.simpleanalytics.viewer.gschema.xml
+rm ~/.local/share/glib-2.0/schemas/org.andypiper.SimpleAnalyticsViewer.gschema.xml
 glib-compile-schemas ~/.local/share/glib-2.0/schemas/
 ```
 
 System install:
 ```bash
-sudo rm /usr/share/glib-2.0/schemas/com.simpleanalytics.viewer.gschema.xml
+sudo rm /usr/share/glib-2.0/schemas/org.andypiper.SimpleAnalyticsViewer.gschema.xml
 sudo glib-compile-schemas /usr/share/glib-2.0/schemas/
 ```
 

@@ -33,10 +33,26 @@ class AnalyticsWindow(Adw.ApplicationWindow):
         # Initialize GSettings for credential persistence
         # Check if schema is installed first to avoid fatal GLib error
         schema_source = Gio.SettingsSchemaSource.get_default()
-        schema_id = "com.simpleanalytics.viewer"
+        schema_id = "org.andypiper.SimpleAnalyticsViewer"
+        old_schema_id = "com.simpleanalytics.viewer"
 
         if schema_source and schema_source.lookup(schema_id, False):
             self.settings = Gio.Settings.new(schema_id)
+
+            # Check if we need to migrate from old schema
+            if schema_source.lookup(old_schema_id, False):
+                old_settings = Gio.Settings.new(old_schema_id)
+                old_api_key = old_settings.get_string("api-key")
+                old_user_id = old_settings.get_string("user-id")
+                old_hostname = old_settings.get_string("hostname")
+
+                # Migrate if old values exist and new values don't
+                if old_api_key and not self.settings.get_string("api-key"):
+                    self.settings.set_string("api-key", old_api_key)
+                if old_user_id and not self.settings.get_string("user-id"):
+                    self.settings.set_string("user-id", old_user_id)
+                if old_hostname and not self.settings.get_string("hostname"):
+                    self.settings.set_string("hostname", old_hostname)
 
             # Try GSettings first, fallback to env vars
             saved_api_key = self.settings.get_string("api-key")
@@ -50,13 +66,10 @@ class AnalyticsWindow(Adw.ApplicationWindow):
 
             # If we got values from env vars, save them to GSettings for next time
             if not saved_api_key and self.api_key:
-                print(f"Saving API key to GSettings")
                 self.settings.set_string("api-key", self.api_key)
             if not saved_user_id and self.user_id:
-                print(f"Saving User ID to GSettings")
                 self.settings.set_string("user-id", self.user_id)
             if not saved_hostname and self.hostname:
-                print(f"Saving hostname to GSettings: {self.hostname}")
                 self.settings.set_string("hostname", self.hostname)
 
             # Force sync to ensure writes are persisted
@@ -91,9 +104,22 @@ class AnalyticsWindow(Adw.ApplicationWindow):
         # Create header bar
         self.header_bar = Adw.HeaderBar()
 
-        # Website dropdown
+        # Website dropdown with custom factory for compact display
         self.website_dropdown = Gtk.DropDown()
         self.website_dropdown.connect("notify::selected", self.on_website_changed)
+
+        # Create factory for list items (shown in dropdown menu)
+        list_factory = Gtk.SignalListItemFactory()
+        list_factory.connect("setup", self._on_dropdown_list_setup)
+        list_factory.connect("bind", self._on_dropdown_list_bind)
+        self.website_dropdown.set_list_factory(list_factory)
+
+        # Create factory for selected item (shown in header bar) - more compact
+        selected_factory = Gtk.SignalListItemFactory()
+        selected_factory.connect("setup", self._on_dropdown_selected_setup)
+        selected_factory.connect("bind", self._on_dropdown_selected_bind)
+        self.website_dropdown.set_factory(selected_factory)
+
         self.header_bar.pack_start(self.website_dropdown)
 
         # Refresh button
@@ -205,6 +231,57 @@ class AnalyticsWindow(Adw.ApplicationWindow):
 
         self.set_content(self.toolbox)
 
+    def _on_dropdown_list_setup(self, factory, list_item):
+        """Set up list item widget for dropdown menu (full hostname with icon)."""
+        box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        box.set_margin_start(8)
+        box.set_margin_end(8)
+        box.set_margin_top(4)
+        box.set_margin_bottom(4)
+
+        icon = Gtk.Image.new_from_icon_name("network-server-symbolic")
+        box.append(icon)
+
+        label = Gtk.Label()
+        label.set_halign(Gtk.Align.START)
+        box.append(label)
+
+        list_item.set_child(box)
+
+    def _on_dropdown_list_bind(self, factory, list_item):
+        """Bind data to list item in dropdown menu."""
+        box = list_item.get_child()
+        label = box.get_last_child()  # Label is the last child after icon
+        string_object = list_item.get_item()
+        if string_object:
+            label.set_text(string_object.get_string())
+
+    def _on_dropdown_selected_setup(self, factory, list_item):
+        """Set up selected item widget (compact - just icon)."""
+        box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
+
+        icon = Gtk.Image.new_from_icon_name("network-server-symbolic")
+        box.append(icon)
+
+        label = Gtk.Label()
+        label.set_ellipsize(3)  # PANGO_ELLIPSIZE_END
+        label.set_max_width_chars(20)  # Limit width
+        box.append(label)
+
+        list_item.set_child(box)
+
+    def _on_dropdown_selected_bind(self, factory, list_item):
+        """Bind data to selected item (shows in header bar)."""
+        box = list_item.get_child()
+        label = box.get_last_child()  # Label is the last child after icon
+        string_object = list_item.get_item()
+        if string_object:
+            hostname = string_object.get_string()
+            # Show shortened version (remove www. and truncate)
+            if hostname.startswith("www."):
+                hostname = hostname[4:]
+            label.set_text(hostname)
+
     def setup_actions(self):
         """Set up window actions and keyboard shortcuts."""
         # Refresh action
@@ -244,9 +321,16 @@ class AnalyticsWindow(Adw.ApplicationWindow):
         self.view_stack.set_visible_child_name(view_name)
 
     def show_shortcuts(self):
-        """Show keyboard shortcuts window."""
-        shortcuts_window = create_shortcuts_window(self)
-        shortcuts_window.present()
+        """Show keyboard shortcuts dialog."""
+        shortcuts_dialog = create_shortcuts_window(self)
+        # Check if it's an Adw.Dialog (new style) or GtkShortcutsWindow (legacy)
+        if hasattr(shortcuts_dialog, 'present') and callable(shortcuts_dialog.present):
+            # New Adw.Dialog API
+            if isinstance(shortcuts_dialog, Adw.Dialog):
+                shortcuts_dialog.present(self)
+            else:
+                # Legacy GtkShortcutsWindow
+                shortcuts_dialog.present()
 
     def show_auth_dialog(self):
         """Show authentication dialog."""
@@ -316,15 +400,13 @@ class AnalyticsWindow(Adw.ApplicationWindow):
                     if isinstance(website, dict) and website.get("hostname") == self.hostname:
                         selected_index = i
                         break
-                else:
-                    # Saved hostname not found, use first website and update saved hostname
-                    if self.websites and isinstance(self.websites[0], dict):
-                        self.hostname = self.websites[0].get("hostname", "")
-                        if self.settings:
-                            self.settings.set_string("hostname", self.hostname)
-            elif self.websites and isinstance(self.websites[0], dict):
-                # No saved hostname, use first website
-                self.hostname = self.websites[0].get("hostname", "")
+                # If not found, keep selected_index = 0 but don't change saved hostname
+            else:
+                # No saved hostname, use first website and save it
+                if self.websites and isinstance(self.websites[0], dict):
+                    self.hostname = self.websites[0].get("hostname", "")
+                    if self.settings:
+                        self.settings.set_string("hostname", self.hostname)
 
             # Set the selection (won't trigger data load due to flag)
             self.website_dropdown.set_selected(selected_index)
@@ -342,17 +424,21 @@ class AnalyticsWindow(Adw.ApplicationWindow):
         """Handle website selection change."""
         # Ignore changes during website list initialization
         if self._loading_websites:
+            print("on_website_changed: Ignoring change during initialization")
             return
 
         selected = dropdown.get_selected()
+        print(f"on_website_changed: selected index = {selected}, loading={self._loading_websites}")
         if selected != Gtk.INVALID_LIST_POSITION and self.websites:
             if isinstance(self.websites[selected], dict):
-                self.hostname = self.websites[selected].get("hostname", "")
-                print(f"Website changed to: {self.hostname}")
+                new_hostname = self.websites[selected].get("hostname", "")
+                print(f"on_website_changed: changing from {self.hostname} to {new_hostname}")
+                self.hostname = new_hostname
 
                 # Save the selected hostname to GSettings
                 if self.settings:
                     self.settings.set_string("hostname", self.hostname)
+                    print(f"on_website_changed: saved {self.hostname} to GSettings")
 
                 self.load_data()
             else:
