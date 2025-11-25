@@ -271,16 +271,7 @@ class ModernHistogramChart(Gtk.DrawingArea):
             cr.show_text(label)
             cr.restore()
 
-        # Draw title
-        cr.set_source_rgb(*AdwaitaColors.TEXT)
-        cr.select_font_face("Sans", 0, 1)
-        cr.set_font_size(16)
-        title = "Pageviews & Visitors"
-        extents = cr.text_extents(title)
-        cr.move_to((width - extents.width) / 2, 25)
-        cr.show_text(title)
-
-        # Draw legend with rounded rectangles
+        # Draw legend with rounded rectangles (no title for cleaner look)
         legend_x = margin_left + plot_width - 160
         legend_y = margin_top + 5
 
