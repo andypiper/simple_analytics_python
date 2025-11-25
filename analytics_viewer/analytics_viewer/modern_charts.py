@@ -6,11 +6,12 @@ Adwaita design language with proper colors, gradients, and styling.
 
 import gi
 import math
+import cairo
 from typing import Any
 
 gi.require_version("Gtk", "4.0")
 
-from gi.repository import Gtk, Gdk
+from gi.repository import Gtk
 
 
 # Adwaita color palette
@@ -123,15 +124,11 @@ class ModernHistogramChart(Gtk.DrawingArea):
         cr.line_to(margin_left, margin_top + plot_height)
         cr.close_path()
 
-        # Apply gradient fill
-        pattern = cr.get_source()
-        gradient = Gdk.LinearGradient(
-            0, margin_top,
-            0, margin_top + plot_height
-        )
-        cr.set_source_rgba(*AdwaitaColors.BLUE_2, 0.15)
-        cr.fill_preserve()
-        cr.set_source_rgba(*AdwaitaColors.BLUE_2, 0.05)
+        # Apply gradient fill using Cairo LinearGradient
+        pattern = cairo.LinearGradient(0, margin_top, 0, margin_top + plot_height)
+        pattern.add_color_stop_rgba(0, *AdwaitaColors.BLUE_2, 0.2)
+        pattern.add_color_stop_rgba(1, *AdwaitaColors.BLUE_2, 0.0)
+        cr.set_source(pattern)
         cr.fill()
 
         cr.restore()
