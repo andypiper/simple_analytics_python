@@ -50,11 +50,17 @@ class AnalyticsWindow(Adw.ApplicationWindow):
 
             # If we got values from env vars, save them to GSettings for next time
             if not saved_api_key and self.api_key:
+                print(f"Saving API key to GSettings")
                 self.settings.set_string("api-key", self.api_key)
             if not saved_user_id and self.user_id:
+                print(f"Saving User ID to GSettings")
                 self.settings.set_string("user-id", self.user_id)
             if not saved_hostname and self.hostname:
+                print(f"Saving hostname to GSettings: {self.hostname}")
                 self.settings.set_string("hostname", self.hostname)
+
+            # Force sync to ensure writes are persisted
+            Gio.Settings.sync()
         else:
             # Fallback if schema not installed
             self.settings = None

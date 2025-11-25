@@ -61,8 +61,11 @@ class ModernHistogramChart(Gtk.DrawingArea):
 
         self.histogram = histogram or []
         self.set_draw_func(self._draw)
-        self.set_content_width(800)
-        self.set_content_height(400)
+        # Don't set fixed width - let it adapt to container
+        # Set minimum size instead
+        self.set_size_request(400, 300)  # Min: 400x300
+        self.set_hexpand(True)  # Expand horizontally
+        self.set_vexpand(False)
 
     def set_data(self, histogram: list[dict[str, Any]]):
         """Update the histogram data and redraw."""
@@ -75,11 +78,17 @@ class ModernHistogramChart(Gtk.DrawingArea):
             self._draw_empty(cr, width, height)
             return
 
-        # Margins
-        margin_left = 70
-        margin_right = 30
-        margin_top = 50
-        margin_bottom = 70
+        # Responsive margins - scale down on narrow screens
+        if width < 600:
+            margin_left = 50
+            margin_right = 20
+            margin_top = 30
+            margin_bottom = 50
+        else:
+            margin_left = 70
+            margin_right = 30
+            margin_top = 50
+            margin_bottom = 70
 
         plot_width = width - margin_left - margin_right
         plot_height = height - margin_top - margin_bottom
@@ -272,36 +281,38 @@ class ModernHistogramChart(Gtk.DrawingArea):
             cr.restore()
 
         # Draw legend with rounded rectangles (no title for cleaner look)
-        legend_x = margin_left + plot_width - 160
-        legend_y = margin_top + 5
+        # Only show legend if there's enough space
+        if width >= 500:
+            legend_x = margin_left + plot_width - 160
+            legend_y = margin_top + 5
 
-        # Legend background - subtle translucent card
-        self._draw_rounded_rect(cr, legend_x - 10, legend_y - 8, 150, 45, 8)
-        cr.set_source_rgba(1.0, 1.0, 1.0, 0.85)
-        cr.fill_preserve()
-        cr.set_source_rgba(*AdwaitaColors.GRAY_3, 0.3)
-        cr.set_line_width(1)
-        cr.stroke()
+            # Legend background - subtle translucent card
+            self._draw_rounded_rect(cr, legend_x - 10, legend_y - 8, 150, 45, 8)
+            cr.set_source_rgba(1.0, 1.0, 1.0, 0.85)
+            cr.fill_preserve()
+            cr.set_source_rgba(*AdwaitaColors.GRAY_3, 0.3)
+            cr.set_line_width(1)
+            cr.stroke()
 
-        # Pageviews legend
-        self._draw_rounded_rect(cr, legend_x, legend_y, 18, 8, 4)
-        cr.set_source_rgb(*AdwaitaColors.BLUE_3)
-        cr.fill()
+            # Pageviews legend
+            self._draw_rounded_rect(cr, legend_x, legend_y, 18, 8, 4)
+            cr.set_source_rgb(*AdwaitaColors.BLUE_3)
+            cr.fill()
 
-        cr.set_source_rgb(*AdwaitaColors.TEXT)
-        cr.set_font_size(11)
-        cr.select_font_face("Sans", 0, 0)
-        cr.move_to(legend_x + 25, legend_y + 8)
-        cr.show_text("Pageviews")
+            cr.set_source_rgb(*AdwaitaColors.TEXT)
+            cr.set_font_size(11)
+            cr.select_font_face("Sans", 0, 0)
+            cr.move_to(legend_x + 25, legend_y + 8)
+            cr.show_text("Pageviews")
 
-        # Visitors legend
-        self._draw_rounded_rect(cr, legend_x, legend_y + 20, 18, 8, 4)
-        cr.set_source_rgb(*AdwaitaColors.GREEN_3)
-        cr.fill()
+            # Visitors legend
+            self._draw_rounded_rect(cr, legend_x, legend_y + 20, 18, 8, 4)
+            cr.set_source_rgb(*AdwaitaColors.GREEN_3)
+            cr.fill()
 
-        cr.set_source_rgb(*AdwaitaColors.TEXT)
-        cr.move_to(legend_x + 25, legend_y + 28)
-        cr.show_text("Visitors")
+            cr.set_source_rgb(*AdwaitaColors.TEXT)
+            cr.move_to(legend_x + 25, legend_y + 28)
+            cr.show_text("Visitors")
 
     def _draw_rounded_rect(self, cr, x, y, width, height, radius):
         """Draw a rounded rectangle path."""

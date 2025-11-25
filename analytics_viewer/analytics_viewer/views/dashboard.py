@@ -35,16 +35,15 @@ class DashboardView(Gtk.ScrolledWindow):
         self.main_box.set_spacing(24)
 
         # Stats cards container - use FlowBox for responsive wrapping
-        stats_clamp = Adw.Clamp()
-        stats_clamp.set_maximum_size(1200)
-
+        # Don't use Clamp here - let FlowBox handle wrapping naturally
         self.stats_flowbox = Gtk.FlowBox()
         self.stats_flowbox.set_selection_mode(Gtk.SelectionMode.NONE)
-        self.stats_flowbox.set_homogeneous(True)
+        self.stats_flowbox.set_homogeneous(False)  # Allow natural sizing
         self.stats_flowbox.set_max_children_per_line(3)
         self.stats_flowbox.set_min_children_per_line(1)
         self.stats_flowbox.set_column_spacing(12)
         self.stats_flowbox.set_row_spacing(12)
+        self.stats_flowbox.set_halign(Gtk.Align.FILL)  # Fill available width
 
         # Pageviews card (navigates to Pages view)
         self.pageviews_card = self.create_stat_card(
@@ -64,8 +63,7 @@ class DashboardView(Gtk.ScrolledWindow):
         )
         self.stats_flowbox.append(self.events_card)
 
-        stats_clamp.set_child(self.stats_flowbox)
-        self.main_box.append(stats_clamp)
+        self.main_box.append(self.stats_flowbox)
 
         # Chart area - no card, blends into window background
         chart_clamp = Adw.Clamp()
@@ -111,9 +109,11 @@ class DashboardView(Gtk.ScrolledWindow):
             card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
             card.add_css_class("card")
 
-        # Set minimum and natural width for proper wrapping
-        card.set_size_request(200, -1)  # Min width 200px
-        card.set_hexpand(True)
+        # Set flexible sizing for FlowBox
+        # Natural width allows cards to size appropriately
+        card.set_size_request(180, -1)  # Min width 180px
+        card.set_hexpand(False)  # Don't force expansion
+        card.set_halign(Gtk.Align.FILL)
 
         # Content box
         content = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
