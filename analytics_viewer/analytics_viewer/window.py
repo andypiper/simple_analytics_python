@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 
-from gi.repository import Gtk, Adw, GLib, Gio
+from gi.repository import Gtk, Adw, GLib, Gio, GObject
 
 from simple_analytics import SimpleAnalyticsClient, AuthenticationError
 
@@ -122,7 +122,7 @@ class AnalyticsWindow(Adw.ApplicationWindow):
             "default-width",
             view_switcher_bar,
             "reveal",
-            GLib.BindingFlags.SYNC_CREATE,
+            GObject.BindingFlags.SYNC_CREATE,
             lambda binding, width: width < 600,
         )
 
