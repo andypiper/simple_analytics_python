@@ -8,14 +8,41 @@ gi.require_version("Adw", "1")
 from gi.repository import Gtk, Adw
 
 
-# Country code to flag emoji mapping
-COUNTRY_FLAGS = {
-    "US": "🇺🇸", "GB": "🇬🇧", "DE": "🇩🇪", "FR": "🇫🇷", "NL": "🇳🇱",
-    "CA": "🇨🇦", "AU": "🇦🇺", "ES": "🇪🇸", "IT": "🇮🇹", "BR": "🇧🇷",
-    "IN": "🇮🇳", "JP": "🇯🇵", "CN": "🇨🇳", "KR": "🇰🇷", "MX": "🇲🇽",
-    "SE": "🇸🇪", "NO": "🇳🇴", "DK": "🇩🇰", "FI": "🇫🇮", "PL": "🇵🇱",
-    "BE": "🇧🇪", "CH": "🇨🇭", "AT": "🇦🇹", "PT": "🇵🇹", "IE": "🇮🇪",
-}
+def country_code_to_flag(country_code: str) -> str:
+    """
+    Convert ISO 3166-1 alpha-2 country code to flag emoji.
+
+    Uses Unicode Regional Indicator Symbols to generate flag emojis
+    for any country code. Works with all valid ISO country codes.
+
+    Args:
+        country_code: Two-letter ISO country code (e.g., "US", "GB", "DE")
+
+    Returns:
+        Flag emoji string (e.g., "🇺🇸") or globe emoji if invalid
+
+    Example:
+        >>> country_code_to_flag("US")
+        '🇺🇸'
+        >>> country_code_to_flag("JP")
+        '🇯🇵'
+    """
+    if not country_code or len(country_code) != 2:
+        return "🌍"
+
+    # Convert to uppercase
+    country_code = country_code.upper()
+
+    # Regional Indicator Symbol Letters start at U+1F1E6 (🇦)
+    # Each letter maps to: base (0x1F1E6) + letter_offset
+    try:
+        flag_chars = [
+            chr(0x1F1E6 + ord(char) - ord('A'))
+            for char in country_code
+        ]
+        return ''.join(flag_chars)
+    except (ValueError, TypeError):
+        return "🌍"
 
 
 class CountriesView(Gtk.ScrolledWindow):
@@ -103,8 +130,8 @@ class CountriesView(Gtk.ScrolledWindow):
 
             row = Adw.ActionRow()
 
-            # Add flag emoji if available
-            flag = COUNTRY_FLAGS.get(code, "🌍")
+            # Generate flag emoji dynamically from country code
+            flag = country_code_to_flag(code)
             row.set_title(f"{flag}  {code}")
             row.set_subtitle(
                 f"{pageviews:,} pageviews • {visitors:,} visitors • {percentage:.1f}%"
