@@ -170,23 +170,37 @@ class AnalyticsWindow(Adw.ApplicationWindow):
             # Fetch websites
             self.websites = self.client.admin.list_websites()
 
+            # Validate websites is a list
+            if not isinstance(self.websites, list):
+                self.show_error(f"Unexpected response from API: {self.websites}")
+                return
+
+            if not self.websites:
+                self.show_error("No websites found in your account. Please add a website at simpleanalytics.com")
+                return
+
             # Update website dropdown
             string_list = Gtk.StringList()
             for website in self.websites:
-                string_list.append(website.get("hostname", "Unknown"))
+                if isinstance(website, dict):
+                    string_list.append(website.get("hostname", "Unknown"))
+                else:
+                    print(f"Warning: Unexpected website format: {website}")
 
             self.website_dropdown.set_model(string_list)
 
             # Select first website or the one from env
             if self.hostname:
                 for i, website in enumerate(self.websites):
-                    if website.get("hostname") == self.hostname:
+                    if isinstance(website, dict) and website.get("hostname") == self.hostname:
                         self.website_dropdown.set_selected(i)
                         break
             elif self.websites:
                 self.website_dropdown.set_selected(0)
 
-            self.load_data()
+            # Load data only if we have a valid website selected
+            if self.website_dropdown.get_selected() != Gtk.INVALID_LIST_POSITION:
+                self.load_data()
 
         except AuthenticationError as e:
             self.show_error(f"Authentication failed: {e.message}")
@@ -206,7 +220,12 @@ class AnalyticsWindow(Adw.ApplicationWindow):
 
     def load_data(self):
         """Load analytics data for the selected website."""
-        if not self.client or not self.hostname:
+        if not self.client:
+            print("No client available")
+            return
+
+        if not self.hostname:
+            print("No hostname selected")
             return
 
         # Calculate date range (last 30 days)
@@ -214,6 +233,8 @@ class AnalyticsWindow(Adw.ApplicationWindow):
         start_date = (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d")
 
         try:
+            print(f"Loading data for {self.hostname} from {start_date} to {end_date}")
+
             # Load data for each view
             self.dashboard_view.load_data(
                 self.client, self.hostname, start_date, end_date
@@ -229,6 +250,8 @@ class AnalyticsWindow(Adw.ApplicationWindow):
             )
 
         except Exception as e:
+            import traceback
+            traceback.print_exc()
             self.show_error(f"Error loading data: {str(e)}")
 
     def show_preferences(self):
