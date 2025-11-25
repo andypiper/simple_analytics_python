@@ -211,8 +211,12 @@ class AnalyticsWindow(Adw.ApplicationWindow):
         """Handle website selection change."""
         selected = dropdown.get_selected()
         if selected != Gtk.INVALID_LIST_POSITION and self.websites:
-            self.hostname = self.websites[selected].get("hostname", "")
-            self.load_data()
+            if isinstance(self.websites[selected], dict):
+                self.hostname = self.websites[selected].get("hostname", "")
+                print(f"Website changed to: {self.hostname}")
+                self.load_data()
+            else:
+                print(f"Invalid website at index {selected}: {self.websites[selected]}")
 
     def on_refresh_clicked(self, button):
         """Handle refresh button click."""
