@@ -38,7 +38,15 @@ class AdminAPI:
             ...     print(f"{site['hostname']} ({site['timezone']})")
         """
         endpoint = "/api/websites"
-        return self._client.get(endpoint, require_auth=True)
+        response = self._client.get(endpoint, require_auth=True)
+
+        # API returns {'success': True, 'websites': [...]}
+        # Extract just the websites list
+        if isinstance(response, dict) and 'websites' in response:
+            return response['websites']
+
+        # Fallback: return response as-is (for backwards compatibility)
+        return response
 
     def add_website(
         self,
