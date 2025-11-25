@@ -283,18 +283,26 @@ class AnalyticsWindow(Adw.ApplicationWindow):
 
             self.website_dropdown.set_model(string_list)
 
-            # Select first website or the one from env
+            # Select the saved hostname or fall back to first website
+            selected_index = 0  # Default to first
             if self.hostname:
+                # Try to find the saved hostname
                 for i, website in enumerate(self.websites):
                     if isinstance(website, dict) and website.get("hostname") == self.hostname:
-                        self.website_dropdown.set_selected(i)
+                        selected_index = i
                         break
-            elif self.websites:
-                self.website_dropdown.set_selected(0)
+                else:
+                    # Saved hostname not found, use first website and update saved hostname
+                    if self.websites and isinstance(self.websites[0], dict):
+                        self.hostname = self.websites[0].get("hostname", "")
+                        if self.settings:
+                            self.settings.set_string("hostname", self.hostname)
+            elif self.websites and isinstance(self.websites[0], dict):
+                # No saved hostname, use first website
+                self.hostname = self.websites[0].get("hostname", "")
 
-            # Load data only if we have a valid website selected
-            if self.website_dropdown.get_selected() != Gtk.INVALID_LIST_POSITION:
-                self.load_data()
+            # Set the selection (this will trigger on_website_changed)
+            self.website_dropdown.set_selected(selected_index)
 
         except AuthenticationError as e:
             self.show_error(f"Authentication failed: {e.message}")
@@ -308,6 +316,11 @@ class AnalyticsWindow(Adw.ApplicationWindow):
             if isinstance(self.websites[selected], dict):
                 self.hostname = self.websites[selected].get("hostname", "")
                 print(f"Website changed to: {self.hostname}")
+
+                # Save the selected hostname to GSettings
+                if self.settings:
+                    self.settings.set_string("hostname", self.hostname)
+
                 self.load_data()
             else:
                 print(f"Invalid website at index {selected}: {self.websites[selected]}")
