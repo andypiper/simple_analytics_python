@@ -2,12 +2,23 @@
 
 For credential persistence to work, you need to install the GSettings schema.
 
-## Quick Install (Development)
+## User Install (Recommended)
 
-From the `analytics_viewer` directory, run:
+Install the schema for your user only (no sudo required):
 
 ```bash
-# Compile and install the schema to your local directory
+# From the analytics_viewer directory
+mkdir -p ~/.local/share/glib-2.0/schemas/
+cp analytics_viewer/com.simpleanalytics.viewer.gschema.xml ~/.local/share/glib-2.0/schemas/
+glib-compile-schemas ~/.local/share/glib-2.0/schemas/
+```
+
+## System Install (Alternative)
+
+Install system-wide (requires sudo):
+
+```bash
+# From the analytics_viewer directory
 sudo cp analytics_viewer/com.simpleanalytics.viewer.gschema.xml /usr/share/glib-2.0/schemas/
 sudo glib-compile-schemas /usr/share/glib-2.0/schemas/
 ```
@@ -27,6 +38,13 @@ gsettings get com.simpleanalytics.viewer api-key
 
 ## Uninstall
 
+User install:
+```bash
+rm ~/.local/share/glib-2.0/schemas/com.simpleanalytics.viewer.gschema.xml
+glib-compile-schemas ~/.local/share/glib-2.0/schemas/
+```
+
+System install:
 ```bash
 sudo rm /usr/share/glib-2.0/schemas/com.simpleanalytics.viewer.gschema.xml
 sudo glib-compile-schemas /usr/share/glib-2.0/schemas/

@@ -59,6 +59,9 @@ class PagesView(Gtk.ScrolledWindow):
         referrers_card.set_child(referrers_group)
         main_box.append(referrers_card)
 
+        # Track referrer rows for clearing
+        self.referrer_rows = []
+
         # Clamp container
         clamp = Adw.Clamp()
         clamp.set_child(main_box)
@@ -127,9 +130,9 @@ class PagesView(Gtk.ScrolledWindow):
     def update_referrers(self, referrers):
         """Update referrers expander."""
         # Clear existing rows
-        while self.referrers_expander.get_first_child():
-            child = self.referrers_expander.get_first_child()
-            self.referrers_expander.remove(child)
+        for row in self.referrer_rows:
+            self.referrers_expander.remove(row)
+        self.referrer_rows.clear()
 
         if not referrers:
             return
@@ -157,3 +160,4 @@ class PagesView(Gtk.ScrolledWindow):
             row.add_prefix(icon)
 
             self.referrers_expander.add_row(row)
+            self.referrer_rows.append(row)

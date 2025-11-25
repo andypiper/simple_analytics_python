@@ -31,22 +31,23 @@ class AnalyticsWindow(Adw.ApplicationWindow):
         self.set_title("Simple Analytics Viewer")
 
         # Initialize GSettings for credential persistence
-        try:
-            self.settings = Gio.Settings.new("com.simpleanalytics.viewer")
-        except:
-            # Fallback if schema not installed
-            self.settings = None
-            print("Warning: GSettings schema not installed, credentials won't persist")
+        # Check if schema is installed first to avoid fatal GLib error
+        schema_source = Gio.SettingsSchemaSource.get_default()
+        schema_id = "com.simpleanalytics.viewer"
 
-        # Load credentials from GSettings or environment
-        if self.settings:
+        if schema_source and schema_source.lookup(schema_id, False):
+            self.settings = Gio.Settings.new(schema_id)
             self.api_key = self.settings.get_string("api-key") or os.environ.get("SA_API_KEY", "")
             self.user_id = self.settings.get_string("user-id") or os.environ.get("SA_USER_ID", "")
             self.hostname = self.settings.get_string("hostname") or os.environ.get("SA_HOSTNAME", "")
         else:
+            # Fallback if schema not installed
+            self.settings = None
             self.api_key = os.environ.get("SA_API_KEY", "")
             self.user_id = os.environ.get("SA_USER_ID", "")
             self.hostname = os.environ.get("SA_HOSTNAME", "")
+            print("Note: GSettings schema not installed - credentials won't persist between sessions")
+            print("See analytics_viewer/INSTALL_GSETTINGS.md for installation instructions")
 
         self.client = None
         self.websites = []

@@ -83,7 +83,7 @@ class CountriesView(Gtk.ScrolledWindow):
         devices_card.set_maximum_size(1200)
 
         devices_group = Adw.PreferencesGroup()
-        devices_group.set_title("Devices & Browsers")
+        devices_group.set_title("Devices and Browsers")
         devices_group.set_description("Device types, browsers, and operating systems")
 
         # Device types expander
@@ -109,6 +109,11 @@ class CountriesView(Gtk.ScrolledWindow):
 
         devices_card.set_child(devices_group)
         main_box.append(devices_card)
+
+        # Track child rows for clearing
+        self.device_type_rows = []
+        self.browser_rows = []
+        self.os_rows = []
 
         # Clamp container
         clamp = Adw.Clamp()
@@ -196,9 +201,9 @@ class CountriesView(Gtk.ScrolledWindow):
     def update_device_types(self, device_types):
         """Update device types expander."""
         # Clear existing rows
-        while self.device_types_expander.get_first_child():
-            child = self.device_types_expander.get_first_child()
-            self.device_types_expander.remove(child)
+        for row in self.device_type_rows:
+            self.device_types_expander.remove(row)
+        self.device_type_rows.clear()
 
         if not device_types:
             return
@@ -222,13 +227,14 @@ class CountriesView(Gtk.ScrolledWindow):
             row.add_suffix(progress)
 
             self.device_types_expander.add_row(row)
+            self.device_type_rows.append(row)
 
     def update_browsers(self, browsers):
         """Update browsers expander."""
         # Clear existing rows
-        while self.browsers_expander.get_first_child():
-            child = self.browsers_expander.get_first_child()
-            self.browsers_expander.remove(child)
+        for row in self.browser_rows:
+            self.browsers_expander.remove(row)
+        self.browser_rows.clear()
 
         if not browsers:
             return
@@ -252,13 +258,14 @@ class CountriesView(Gtk.ScrolledWindow):
             row.add_suffix(progress)
 
             self.browsers_expander.add_row(row)
+            self.browser_rows.append(row)
 
     def update_os(self, operating_systems):
         """Update operating systems expander."""
         # Clear existing rows
-        while self.os_expander.get_first_child():
-            child = self.os_expander.get_first_child()
-            self.os_expander.remove(child)
+        for row in self.os_rows:
+            self.os_expander.remove(row)
+        self.os_rows.clear()
 
         if not operating_systems:
             return
@@ -282,3 +289,4 @@ class CountriesView(Gtk.ScrolledWindow):
             row.add_suffix(progress)
 
             self.os_expander.add_row(row)
+            self.os_rows.append(row)
