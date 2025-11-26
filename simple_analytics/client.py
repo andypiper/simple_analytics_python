@@ -1,6 +1,8 @@
 """Main client class for the Simple Analytics API."""
 
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 from typing import Any
 
 from .exceptions import (
@@ -56,7 +58,27 @@ class SimpleAnalyticsClient:
         self.base_url = base_url.rstrip("/")
         self.timeout = timeout
         self.user_agent = user_agent or self.DEFAULT_USER_AGENT
+
+        # Configure session with connection pooling and retries
         self._session = requests.Session()
+
+        # Retry strategy for transient failures
+        retry_strategy = Retry(
+            total=3,
+            backoff_factor=0.5,
+            status_forcelist=[429, 500, 502, 503, 504],
+            allowed_methods=["GET", "POST"]
+        )
+
+        # Connection pooling adapter
+        adapter = HTTPAdapter(
+            pool_connections=10,
+            pool_maxsize=20,
+            max_retries=retry_strategy
+        )
+
+        self._session.mount("http://", adapter)
+        self._session.mount("https://", adapter)
 
         # Import here to avoid circular imports
         from .stats import StatsAPI

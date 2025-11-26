@@ -133,13 +133,9 @@ class EventsView(Gtk.ScrolledWindow):
 
     def update_events_list(self, events):
         """Update the events list."""
-        # Clear existing
-        while True:
-            row = self.events_list.get_row_at_index(0)
-            if row:
-                self.events_list.remove(row)
-            else:
-                break
+        # Clear existing rows efficiently
+        while (row := self.events_list.get_row_at_index(0)) is not None:
+            self.events_list.remove(row)
 
         if not events:
             # Show empty state

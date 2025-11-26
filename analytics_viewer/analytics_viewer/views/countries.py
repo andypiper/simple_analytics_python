@@ -195,13 +195,9 @@ class CountriesView(Gtk.ScrolledWindow):
 
     def update_countries_list(self, countries, total_pageviews):
         """Update the countries list."""
-        # Clear existing
-        while True:
-            row = self.countries_list.get_row_at_index(0)
-            if row:
-                self.countries_list.remove(row)
-            else:
-                break
+        # Clear existing rows efficiently
+        while (row := self.countries_list.get_row_at_index(0)) is not None:
+            self.countries_list.remove(row)
 
         if not countries:
             row = Adw.ActionRow()

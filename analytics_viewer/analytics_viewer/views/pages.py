@@ -136,13 +136,9 @@ class PagesView(Gtk.ScrolledWindow):
 
     def update_pages_list(self, pages):
         """Update the pages list."""
-        # Clear existing
-        while True:
-            row = self.pages_list.get_row_at_index(0)
-            if row:
-                self.pages_list.remove(row)
-            else:
-                break
+        # Clear existing rows efficiently
+        while (row := self.pages_list.get_row_at_index(0)) is not None:
+            self.pages_list.remove(row)
 
         if not pages:
             row = Adw.ActionRow()

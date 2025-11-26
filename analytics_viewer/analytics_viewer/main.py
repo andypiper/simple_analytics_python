@@ -23,6 +23,7 @@ gi.require_version("Adw", "1")
 from gi.repository import Gtk, Adw, Gio, GLib
 
 from .window import AnalyticsWindow
+from .logging_config import setup_logging
 
 
 class AnalyticsApplication(Adw.Application):
@@ -99,6 +100,10 @@ class AnalyticsApplication(Adw.Application):
 
 def main():
     """Main entry point."""
+    # Set up logging
+    verbose = "--verbose" in sys.argv or "-v" in sys.argv
+    setup_logging(verbose=verbose)
+
     app = AnalyticsApplication()
     return app.run(sys.argv)
 

@@ -4,6 +4,7 @@ Uses modern Cairo rendering with Adwaita styling for beautiful charts.
 """
 
 import gi
+import logging
 from datetime import datetime
 
 gi.require_version("Gtk", "4.0")
@@ -13,6 +14,8 @@ from gi.repository import Gtk, Adw, Gdk, GLib
 
 # Use modern Adwaita-styled Cairo charts
 from ..modern_charts import ModernHistogramChart
+
+logger = logging.getLogger(__name__)
 
 
 class DashboardView(Gtk.ScrolledWindow):
@@ -190,8 +193,8 @@ class DashboardView(Gtk.ScrolledWindow):
                 total_events = sum(
                     e.get("total", 0) for e in events_stats.get("events", [])
                 )
-            except:
-                pass
+            except Exception as e:
+                logger.debug(f"Events API unavailable: {e}")
 
             # Schedule UI updates on main thread
             pageviews = stats.get("pageviews", 0)
@@ -226,13 +229,9 @@ class DashboardView(Gtk.ScrolledWindow):
 
     def update_pages_list(self, pages):
         """Update the top pages list."""
-        # Clear existing
-        while True:
-            row = self.pages_list.get_row_at_index(0)
-            if row:
-                self.pages_list.remove(row)
-            else:
-                break
+        # Clear existing rows efficiently
+        while (row := self.pages_list.get_row_at_index(0)) is not None:
+            self.pages_list.remove(row)
 
         # Add pages
         for i, page in enumerate(pages[:10]):

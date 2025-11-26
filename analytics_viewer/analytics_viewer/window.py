@@ -1,6 +1,7 @@
 """Main application window."""
 
 import gi
+import logging
 import os
 import threading
 from concurrent.futures import ThreadPoolExecutor
@@ -21,6 +22,8 @@ from .views.pages import PagesView
 from .views.countries import CountriesView
 from .preferences import PreferencesDialog
 from .shortcuts import create_shortcuts_window
+
+logger = logging.getLogger(__name__)
 
 
 class AnalyticsWindow(Adw.ApplicationWindow):
@@ -53,10 +56,10 @@ class AnalyticsWindow(Adw.ApplicationWindow):
                 # Migrate credentials to keyring if they exist
                 if old_api_key and not CredentialManager.retrieve_api_key():
                     CredentialManager.store_api_key(old_api_key)
-                    print("Migrated API key from old GSettings to keyring")
+                    logger.info("Migrated API key from old GSettings to keyring")
                 if old_user_id and not CredentialManager.retrieve_user_id():
                     CredentialManager.store_user_id(old_user_id)
-                    print("Migrated user ID from old GSettings to keyring")
+                    logger.info("Migrated user ID from old GSettings to keyring")
 
                 # Migrate hostname to new GSettings (not sensitive)
                 if old_hostname and not self.settings.get_string("hostname"):
@@ -69,23 +72,23 @@ class AnalyticsWindow(Adw.ApplicationWindow):
             # Get hostname from GSettings (not sensitive)
             saved_hostname = self.settings.get_string("hostname")
 
-            print(f"__init__: Read from keyring: api_key={'set' if saved_api_key else 'not set'}, user_id={'set' if saved_user_id else 'not set'}")
-            print(f"__init__: Read from GSettings: hostname='{saved_hostname}'")
+            logger.debug(f"Read from keyring: api_key={'set' if saved_api_key else 'not set'}, user_id={'set' if saved_user_id else 'not set'}")
+            logger.debug(f"Read from GSettings: hostname='{saved_hostname}'")
 
             # Use saved values or fall back to env vars
             self.api_key = saved_api_key or os.environ.get("SA_API_KEY", "")
             self.user_id = saved_user_id or os.environ.get("SA_USER_ID", "")
             self.hostname = saved_hostname or os.environ.get("SA_HOSTNAME", "")
 
-            print(f"__init__: Final hostname after fallback: '{self.hostname}'")
+            logger.debug(f"Final hostname after fallback: '{self.hostname}'")
 
             # If we got values from env vars, save them for next time
             if not saved_api_key and self.api_key:
                 CredentialManager.store_api_key(self.api_key)
-                print("Stored API key from env var to keyring")
+                logger.info("Stored API key from env var to keyring")
             if not saved_user_id and self.user_id:
                 CredentialManager.store_user_id(self.user_id)
-                print("Stored user ID from env var to keyring")
+                logger.info("Stored user ID from env var to keyring")
             if not saved_hostname and self.hostname:
                 self.settings.set_string("hostname", self.hostname)
 
@@ -110,8 +113,8 @@ class AnalyticsWindow(Adw.ApplicationWindow):
             if not saved_user_id and self.user_id:
                 CredentialManager.store_user_id(self.user_id)
 
-            print("Note: GSettings schema not installed - hostname won't persist between sessions")
-            print("See analytics_viewer/INSTALL_GSETTINGS.md for installation instructions")
+            logger.warning("GSettings schema not installed - hostname won't persist between sessions")
+            logger.info("See analytics_viewer/INSTALL_GSETTINGS.md for installation instructions")
 
         # Thread pool for API calls (limit concurrent requests)
         self._executor = ThreadPoolExecutor(max_workers=4, thread_name_prefix="api-")
@@ -139,7 +142,7 @@ class AnalyticsWindow(Adw.ApplicationWindow):
 
     def on_close_request(self, *args):
         """Clean up resources before closing."""
-        print("Window closing - shutting down thread pool")
+        logger.info("Window closing - shutting down thread pool")
         self._executor.shutdown(wait=False, cancel_futures=True)
         return False  # Allow window to close
 
@@ -425,7 +428,7 @@ class AnalyticsWindow(Adw.ApplicationWindow):
                 return
 
             # Block signal before setting model - prevents callback during initialization
-            print(f"authenticate: Blocking signal handler")
+            logger.debug("Blocking signal handler during dropdown setup")
             self.website_dropdown.handler_block(self._website_changed_handler_id)
 
             # Update website dropdown
@@ -434,27 +437,27 @@ class AnalyticsWindow(Adw.ApplicationWindow):
                 if isinstance(website, dict):
                     string_list.append(website.get("hostname", "Unknown"))
                 else:
-                    print(f"Warning: Unexpected website format: {website}")
+                    logger.warning(f"Unexpected website format: {website}")
 
             self.website_dropdown.set_model(string_list)
 
             # Select the saved hostname or fall back to first website
             selected_index = 0  # Default to first
-            print(f"authenticate: self.hostname = '{self.hostname}'")
-            print(f"authenticate: Available websites: {[w.get('hostname') for w in self.websites if isinstance(w, dict)]}")
+            logger.debug(f"Current hostname: '{self.hostname}'")
+            logger.debug(f"Available websites: {[w.get('hostname') for w in self.websites if isinstance(w, dict)]}")
 
             if self.hostname:
                 # Try to find the saved hostname
                 for i, website in enumerate(self.websites):
                     if isinstance(website, dict) and website.get("hostname") == self.hostname:
                         selected_index = i
-                        print(f"authenticate: Found saved hostname at index {i}")
+                        logger.debug(f"Found saved hostname at index {i}")
                         break
                 else:
-                    print(f"authenticate: Saved hostname '{self.hostname}' not found in website list")
+                    logger.debug(f"Saved hostname '{self.hostname}' not found in website list")
                 # If not found, keep selected_index = 0 but don't change saved hostname
             else:
-                print(f"authenticate: No saved hostname, using first website")
+                logger.debug("No saved hostname, using first website")
                 # No saved hostname, use first website and save it
                 if self.websites and isinstance(self.websites[0], dict):
                     self.hostname = self.websites[0].get("hostname", "")
@@ -462,11 +465,11 @@ class AnalyticsWindow(Adw.ApplicationWindow):
                         self.settings.set_string("hostname", self.hostname)
 
             # Set selection while signal is still blocked
-            print(f"authenticate: Setting dropdown to index {selected_index} (hostname: {self.hostname})")
+            logger.debug(f"Setting dropdown to index {selected_index} (hostname: {self.hostname})")
             self.website_dropdown.set_selected(selected_index)
 
             # Unblock signal after everything is set up
-            print(f"authenticate: Unblocking signal handler")
+            logger.debug("Unblocking signal handler")
             self.website_dropdown.handler_unblock(self._website_changed_handler_id)
 
             # Now load data with the correct hostname
@@ -480,21 +483,21 @@ class AnalyticsWindow(Adw.ApplicationWindow):
     def on_website_changed(self, dropdown, param):
         """Handle website selection change."""
         selected = dropdown.get_selected()
-        print(f"on_website_changed: selected index = {selected}")
+        logger.debug(f"Website changed: selected index = {selected}")
         if selected != Gtk.INVALID_LIST_POSITION and self.websites:
             if isinstance(self.websites[selected], dict):
                 new_hostname = self.websites[selected].get("hostname", "")
-                print(f"on_website_changed: changing from {self.hostname} to {new_hostname}")
+                logger.info(f"Switching from {self.hostname} to {new_hostname}")
                 self.hostname = new_hostname
 
                 # Save the selected hostname to GSettings
                 if self.settings:
                     self.settings.set_string("hostname", self.hostname)
-                    print(f"on_website_changed: saved {self.hostname} to GSettings")
+                    logger.debug(f"Saved hostname '{self.hostname}' to GSettings")
 
                 self.load_data()
             else:
-                print(f"on_website_changed: Invalid website at index {selected}: {self.websites[selected]}")
+                logger.error(f"Invalid website at index {selected}: {self.websites[selected]}")
 
     def on_refresh_clicked(self, button):
         """Handle refresh button click."""
@@ -577,11 +580,11 @@ class AnalyticsWindow(Adw.ApplicationWindow):
     def load_data(self):
         """Load analytics data for the selected website asynchronously."""
         if not self.client:
-            print("No client available")
+            logger.warning("Cannot load data - client not initialized")
             return
 
         if not self.hostname:
-            print("No hostname selected")
+            logger.warning("Cannot load data - no hostname selected")
             return
 
         # Cancel any in-flight loads from previous website selection
@@ -597,7 +600,7 @@ class AnalyticsWindow(Adw.ApplicationWindow):
         client = self.client
         hostname = self.hostname
 
-        print(f"Loading data for {hostname} from {start_date} to {end_date} (gen {current_gen})")
+        logger.info(f"Loading data for {hostname} from {start_date} to {end_date} (generation {current_gen})")
 
         # Load each view in parallel using thread pool
         # This limits concurrent requests and allows cancellation
@@ -620,12 +623,12 @@ class AnalyticsWindow(Adw.ApplicationWindow):
             # Check if this load was superseded by a newer request
             with self._load_lock:
                 if generation != self._current_load_generation:
-                    print(f"Skipping outdated {view_name} load (gen {generation})")
+                    logger.debug(f"Skipping outdated {view_name} load (generation {generation})")
                     return
 
-            print(f"Loading {view_name} data in background (gen {generation})...")
+            logger.debug(f"Loading {view_name} data in background (generation {generation})")
             view.load_data(client, hostname, start_date, end_date)
-            print(f"{view_name} data loaded successfully (gen {generation})")
+            logger.info(f"{view_name} data loaded successfully")
         except Exception as e:
             import traceback
             traceback.print_exc()
@@ -660,7 +663,7 @@ class AnalyticsWindow(Adw.ApplicationWindow):
         os.environ["SA_USER_ID"] = user_id
         os.environ["SA_HOSTNAME"] = hostname
 
-        print("Credentials saved to keyring")
+        logger.info("Credentials saved to keyring")
 
         # Re-authenticate
         self.authenticate()
