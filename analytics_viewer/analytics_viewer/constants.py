@@ -25,13 +25,6 @@ class DateRange(StrEnum):
     THIRTY_DAYS = "30"
 
 
-class ColorScheme(StrEnum):
-    """Available chart color schemes."""
-    DEFAULT = "default"
-    PURPLE_ORANGE = "purple_orange"
-    GREEN_BLUE = "green_blue"
-
-
 class DateRanges:
     """Date range constants for analytics queries."""
     DEFAULT_RANGE = timedelta(days=30)

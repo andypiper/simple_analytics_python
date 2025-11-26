@@ -1,11 +1,14 @@
 """Referrers view showing traffic sources."""
 
 import gi
+import logging
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 
 from gi.repository import Gtk, Adw
+
+logger = logging.getLogger(__name__)
 
 
 class ReferrersView(Gtk.ScrolledWindow):
@@ -147,17 +150,13 @@ class ReferrersView(Gtk.ScrolledWindow):
             self.update_referrers_list(referrers)
 
         except Exception as e:
-            print(f"Error loading referrers data: {e}")
+            logger.error(f"Error loading referrers data: {e}")
 
     def update_referrers_list(self, referrers):
         """Update the referrers list."""
         # Clear existing
-        while True:
-            row = self.referrers_list.get_row_at_index(0)
-            if row:
-                self.referrers_list.remove(row)
-            else:
-                break
+        while (row := self.referrers_list.get_row_at_index(0)) is not None:
+            self.referrers_list.remove(row)
 
         # Add referrers
         for i, referrer in enumerate(referrers[:20]):

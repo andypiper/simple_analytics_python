@@ -14,53 +14,29 @@ gi.require_version("Gtk", "4.0")
 from gi.repository import Gtk
 
 
-# Adwaita color palette
+# Adwaita color palette (only colors actually used in charts)
 class AdwaitaColors:
     """Adwaita color scheme."""
-    BLUE_1 = (0.39, 0.58, 0.93)      # #62a0ea
     BLUE_2 = (0.20, 0.47, 0.90)      # #3584e4
     BLUE_3 = (0.11, 0.44, 0.85)      # #1c71d8
-    BLUE_4 = (0.04, 0.37, 0.78)      # #0a57c5
-    BLUE_5 = (0.03, 0.31, 0.63)      # #084d9f
 
-    GREEN_1 = (0.55, 0.89, 0.56)     # #8ce98e
     GREEN_2 = (0.38, 0.78, 0.52)     # #57e389
     GREEN_3 = (0.15, 0.64, 0.41)     # #26a269
-    GREEN_4 = (0.12, 0.52, 0.36)     # #1e8558
-    GREEN_5 = (0.09, 0.43, 0.30)     # #176d4c
 
-    ORANGE_1 = (1.00, 0.75, 0.53)    # #ffc988
-    ORANGE_2 = (1.00, 0.62, 0.29)    # #ffa04a
-    ORANGE_3 = (1.00, 0.47, 0.16)    # #ff7800
-    ORANGE_4 = (0.90, 0.38, 0.07)    # #e66100
-
-    PURPLE_1 = (0.87, 0.68, 0.98)    # #dcadfa
-    PURPLE_2 = (0.78, 0.47, 0.99)    # #c778fc
-    PURPLE_3 = (0.61, 0.31, 0.85)    # #9b4fd9
-
-    RED_1 = (0.98, 0.55, 0.58)       # #f96f95
-    RED_2 = (0.95, 0.26, 0.36)       # #f2355d
-    RED_3 = (0.89, 0.15, 0.29)       # #e32649
-
-    GRAY_1 = (0.98, 0.98, 0.98)      # #f9f9f9
-    GRAY_2 = (0.95, 0.95, 0.95)      # #f2f2f2
     GRAY_3 = (0.87, 0.87, 0.87)      # #dddddd
     GRAY_4 = (0.80, 0.80, 0.80)      # #cccccc
-    GRAY_5 = (0.60, 0.60, 0.60)      # #999999
 
     BACKGROUND = (0.98, 0.98, 0.98)  # #fafafa - matches Adwaita window bg
-    TEXT = (0.13, 0.13, 0.13)        # #212121
     TEXT_SECONDARY = (0.45, 0.45, 0.45)  # #737373
 
 
 class ModernHistogramChart(Gtk.DrawingArea):
     """A beautiful modern histogram chart with Adwaita styling and interactivity."""
 
-    def __init__(self, histogram: list[dict[str, Any]] = None, color_scheme: str = "default"):
+    def __init__(self, histogram: list[dict[str, Any]] = None):
         super().__init__()
 
         self.histogram = histogram or []
-        self.color_scheme = color_scheme
         self.set_draw_func(self._draw)
         # Don't set fixed width - let it adapt to container
         # Set minimum size instead
@@ -87,43 +63,11 @@ class ModernHistogramChart(Gtk.DrawingArea):
         self.histogram = histogram
         self.queue_draw()
 
-    def set_color_scheme(self, color_scheme: str):
-        """Update the color scheme and redraw."""
-        self.color_scheme = color_scheme
-        self.queue_draw()
-
-    def _get_colors(self):
-        """Get colors based on the current color scheme."""
-        if self.color_scheme == "purple_orange":
-            return {
-                "primary": AdwaitaColors.PURPLE_3,
-                "primary_light": AdwaitaColors.PURPLE_2,
-                "secondary": AdwaitaColors.ORANGE_3,
-                "secondary_light": AdwaitaColors.ORANGE_2,
-            }
-        elif self.color_scheme == "green_blue":
-            return {
-                "primary": AdwaitaColors.GREEN_3,
-                "primary_light": AdwaitaColors.GREEN_2,
-                "secondary": AdwaitaColors.BLUE_3,
-                "secondary_light": AdwaitaColors.BLUE_2,
-            }
-        else:  # default
-            return {
-                "primary": AdwaitaColors.BLUE_3,
-                "primary_light": AdwaitaColors.BLUE_2,
-                "secondary": AdwaitaColors.GREEN_3,
-                "secondary_light": AdwaitaColors.GREEN_2,
-            }
-
     def _draw(self, area, cr, width, height):
         """Draw function called by GTK."""
         if not self.histogram:
             self._draw_empty(cr, width, height)
             return
-
-        # Get colors for current scheme
-        colors = self._get_colors()
 
         # Responsive margins - scale down on narrow screens
         if width < 600:
@@ -184,8 +128,8 @@ class ModernHistogramChart(Gtk.DrawingArea):
 
         # Apply gradient fill using Cairo LinearGradient
         pattern = cairo.LinearGradient(0, margin_top, 0, margin_top + plot_height)
-        pattern.add_color_stop_rgba(0, *colors["primary_light"], 0.2)
-        pattern.add_color_stop_rgba(1, *colors["primary_light"], 0.0)
+        pattern.add_color_stop_rgba(0, *AdwaitaColors.BLUE_2, 0.2)
+        pattern.add_color_stop_rgba(1, *AdwaitaColors.BLUE_2, 0.0)
         cr.set_source(pattern)
         cr.fill()
 
@@ -219,7 +163,7 @@ class ModernHistogramChart(Gtk.DrawingArea):
             else:
                 cr.line_to(x, y)
 
-        cr.set_source_rgb(*colors["primary"])
+        cr.set_source_rgb(*AdwaitaColors.BLUE_3)
         cr.stroke()
 
         # Draw pageviews points and track positions for interaction
@@ -239,12 +183,12 @@ class ModernHistogramChart(Gtk.DrawingArea):
 
             # Outer glow (larger when hovered)
             cr.arc(x, y, glow_size, 0, 2 * math.pi)
-            cr.set_source_rgba(*colors["primary_light"], 0.4 if is_hovered else 0.3)
+            cr.set_source_rgba(*AdwaitaColors.BLUE_2, 0.4 if is_hovered else 0.3)
             cr.fill()
 
             # Main point (larger when hovered)
             cr.arc(x, y, point_size, 0, 2 * math.pi)
-            cr.set_source_rgb(*colors["primary"])
+            cr.set_source_rgb(*AdwaitaColors.BLUE_3)
             cr.fill()
 
             # Inner highlight
@@ -275,7 +219,7 @@ class ModernHistogramChart(Gtk.DrawingArea):
             else:
                 cr.line_to(x, y)
 
-        cr.set_source_rgb(*colors["secondary"])
+        cr.set_source_rgb(*AdwaitaColors.GREEN_3)
         cr.stroke()
 
         # Draw visitors points
@@ -284,11 +228,11 @@ class ModernHistogramChart(Gtk.DrawingArea):
             y = margin_top + plot_height - (value / max_value) * plot_height
 
             cr.arc(x, y, 5, 0, 2 * math.pi)
-            cr.set_source_rgba(*colors["secondary_light"], 0.3)
+            cr.set_source_rgba(*AdwaitaColors.GREEN_2, 0.3)
             cr.fill()
 
             cr.arc(x, y, 3.5, 0, 2 * math.pi)
-            cr.set_source_rgb(*colors["secondary"])
+            cr.set_source_rgb(*AdwaitaColors.GREEN_3)
             cr.fill()
 
             cr.arc(x, y, 2, 0, 2 * math.pi)
@@ -336,19 +280,6 @@ class ModernHistogramChart(Gtk.DrawingArea):
             cr.move_to(0, 0)
             cr.show_text(label)
             cr.restore()
-
-        # Draw legend with rounded rectangles (no title for cleaner look)
-        # Legend has been moved to the chart header in dashboard.py
-        # No longer drawing it as an overlay on the chart
-
-    def _draw_rounded_rect(self, cr, x, y, width, height, radius):
-        """Draw a rounded rectangle path."""
-        cr.new_sub_path()
-        cr.arc(x + width - radius, y + radius, radius, -math.pi/2, 0)
-        cr.arc(x + width - radius, y + height - radius, radius, 0, math.pi/2)
-        cr.arc(x + radius, y + height - radius, radius, math.pi/2, math.pi)
-        cr.arc(x + radius, y + radius, radius, math.pi, 3*math.pi/2)
-        cr.close_path()
 
     def _draw_empty(self, cr, width, height):
         """Draw empty state."""

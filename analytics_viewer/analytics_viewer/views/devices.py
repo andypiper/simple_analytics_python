@@ -1,11 +1,14 @@
 """Devices view showing browser, OS, and device type breakdown."""
 
 import gi
+import logging
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 
 from gi.repository import Gtk, Adw
+
+logger = logging.getLogger(__name__)
 
 
 class DevicesView(Gtk.ScrolledWindow):
@@ -137,17 +140,13 @@ class DevicesView(Gtk.ScrolledWindow):
             self.update_os_list(operating_systems)
 
         except Exception as e:
-            print(f"Error loading devices data: {e}")
+            logger.error(f"Error loading devices data: {e}")
 
     def update_device_types_list(self, device_types):
         """Update the device types list."""
         # Clear existing
-        while True:
-            row = self.device_types_list.get_row_at_index(0)
-            if row:
-                self.device_types_list.remove(row)
-            else:
-                break
+        while (row := self.device_types_list.get_row_at_index(0)) is not None:
+            self.device_types_list.remove(row)
 
         # Calculate total for percentages
         total = sum(dt.get("pageviews", 0) for dt in device_types)
@@ -172,12 +171,8 @@ class DevicesView(Gtk.ScrolledWindow):
     def update_browsers_list(self, browsers):
         """Update the browsers list."""
         # Clear existing
-        while True:
-            row = self.browsers_list.get_row_at_index(0)
-            if row:
-                self.browsers_list.remove(row)
-            else:
-                break
+        while (row := self.browsers_list.get_row_at_index(0)) is not None:
+            self.browsers_list.remove(row)
 
         # Calculate total for percentages
         total = sum(b.get("pageviews", 0) for b in browsers)
@@ -207,12 +202,8 @@ class DevicesView(Gtk.ScrolledWindow):
     def update_os_list(self, operating_systems):
         """Update the operating systems list."""
         # Clear existing
-        while True:
-            row = self.os_list.get_row_at_index(0)
-            if row:
-                self.os_list.remove(row)
-            else:
-                break
+        while (row := self.os_list.get_row_at_index(0)) is not None:
+            self.os_list.remove(row)
 
         # Calculate total for percentages
         total = sum(os.get("pageviews", 0) for os in operating_systems)

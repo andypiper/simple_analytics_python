@@ -14,7 +14,7 @@ from gi.repository import Gtk, Adw, Gdk, GLib
 
 # Use modern Adwaita-styled Cairo charts
 from ..modern_charts import ModernHistogramChart
-from ..constants import DateRanges, ColorScheme
+from ..constants import DateRanges
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +75,7 @@ class DashboardView(Gtk.ScrolledWindow):
 
         chart_container = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
 
-        # Chart header with date range selector, color scheme, and legend
+        # Chart header with date range selector and legend
         chart_header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
         chart_header.set_margin_start(12)
         chart_header.set_margin_end(12)
@@ -97,38 +97,20 @@ class DashboardView(Gtk.ScrolledWindow):
 
         chart_header.append(date_range_box)
 
-        # Color scheme dropdown
-        color_scheme_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-        color_scheme_label = Gtk.Label(label="Colors:")
-        color_scheme_label.add_css_class("dim-label")
-        color_scheme_box.append(color_scheme_label)
-
-        self.color_scheme_dropdown = Gtk.DropDown()
-        color_scheme_model = Gtk.StringList()
-        color_scheme_model.append("Blue/Green")
-        color_scheme_model.append("Purple/Orange")
-        color_scheme_model.append("Green/Blue")
-        self.color_scheme_dropdown.set_model(color_scheme_model)
-        self.color_scheme_dropdown.set_selected(0)  # Default to Blue/Green
-        self.color_scheme_dropdown.connect("notify::selected", self.on_color_scheme_changed)
-        color_scheme_box.append(self.color_scheme_dropdown)
-
-        chart_header.append(color_scheme_box)
-
         # Spacer to push legend to the right
         spacer = Gtk.Box()
         spacer.set_hexpand(True)
         chart_header.append(spacer)
 
-        # Legend (moved from chart overlay)
+        # Legend
         legend_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=16)
 
         # Pageviews legend item
         pageviews_legend = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-        self.pageviews_dot = Gtk.Box()
-        self.pageviews_dot.set_size_request(12, 12)
-        self.pageviews_dot.add_css_class("chart-legend-dot-primary-default")
-        pageviews_legend.append(self.pageviews_dot)
+        pageviews_dot = Gtk.Box()
+        pageviews_dot.set_size_request(12, 12)
+        pageviews_dot.add_css_class("chart-legend-dot-blue")
+        pageviews_legend.append(pageviews_dot)
         pageviews_label = Gtk.Label(label="Pageviews")
         pageviews_label.add_css_class("dim-label")
         pageviews_legend.append(pageviews_label)
@@ -136,10 +118,10 @@ class DashboardView(Gtk.ScrolledWindow):
 
         # Visitors legend item
         visitors_legend = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-        self.visitors_dot = Gtk.Box()
-        self.visitors_dot.set_size_request(12, 12)
-        self.visitors_dot.add_css_class("chart-legend-dot-secondary-default")
-        visitors_legend.append(self.visitors_dot)
+        visitors_dot = Gtk.Box()
+        visitors_dot.set_size_request(12, 12)
+        visitors_dot.add_css_class("chart-legend-dot-green")
+        visitors_legend.append(visitors_dot)
         visitors_label = Gtk.Label(label="Visitors")
         visitors_label.add_css_class("dim-label")
         visitors_legend.append(visitors_label)
@@ -326,32 +308,3 @@ class DashboardView(Gtk.ScrolledWindow):
             row.add_prefix(rank_label)
 
             self.pages_list.append(row)
-
-    def on_color_scheme_changed(self, dropdown, param):
-        """Handle color scheme change."""
-        selected = dropdown.get_selected()
-        scheme_map = {
-            0: ColorScheme.DEFAULT,
-            1: ColorScheme.PURPLE_ORANGE,
-            2: ColorScheme.GREEN_BLUE,
-        }
-
-        if selected in scheme_map:
-            scheme = scheme_map[selected]
-            logger.info(f"Color scheme changed to {scheme}")
-
-            # Update chart color scheme
-            self.histogram_chart.set_color_scheme(scheme)
-
-            # Update legend dots
-            # Remove old CSS classes
-            self.pageviews_dot.remove_css_class("chart-legend-dot-primary-default")
-            self.pageviews_dot.remove_css_class("chart-legend-dot-primary-purple_orange")
-            self.pageviews_dot.remove_css_class("chart-legend-dot-primary-green_blue")
-            self.visitors_dot.remove_css_class("chart-legend-dot-secondary-default")
-            self.visitors_dot.remove_css_class("chart-legend-dot-secondary-purple_orange")
-            self.visitors_dot.remove_css_class("chart-legend-dot-secondary-green_blue")
-
-            # Add new CSS classes
-            self.pageviews_dot.add_css_class(f"chart-legend-dot-primary-{scheme}")
-            self.visitors_dot.add_css_class(f"chart-legend-dot-secondary-{scheme}")
