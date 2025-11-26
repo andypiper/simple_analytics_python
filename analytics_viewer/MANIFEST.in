@@ -1,0 +1,8 @@
+include README.md
+include LICENSE
+include pyproject.toml
+include INSTALL_GSETTINGS.md
+recursive-include analytics_viewer *.css
+recursive-include analytics_viewer *.xml
+recursive-include data *.desktop
+recursive-include data *.xml

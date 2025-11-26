@@ -1,0 +1,13 @@
+[Desktop Entry]
+Name=Simple Analytics Viewer
+GenericName=Analytics Viewer
+Comment=View your Simple Analytics data with a beautiful GNOME interface
+Categories=Office;Network;
+Exec=analytics-viewer
+Icon=org.andypiper.SimpleAnalyticsViewer
+Terminal=false
+Type=Application
+Keywords=analytics;statistics;web;metrics;
+StartupNotify=true
+StartupWMClass=analytics-viewer
+X-GNOME-UsesNotifications=false

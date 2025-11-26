@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>org.andypiper.SimpleAnalyticsViewer</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <name>Simple Analytics Viewer</name>
+  <summary>View your Simple Analytics data with a beautiful GNOME interface</summary>
+
+  <description>
+    <p>
+      Simple Analytics Viewer is a native GNOME application for viewing your Simple Analytics data.
+      Built with GTK4 and libadwaita, it provides a beautiful, modern interface that fits perfectly
+      with your GNOME desktop.
+    </p>
+    <p>Features:</p>
+    <ul>
+      <li>Beautiful dashboard with native Cairo-rendered charts</li>
+      <li>Interactive line charts with hover tooltips showing pageviews and visitors</li>
+      <li>Events tracking for both custom and automated events</li>
+      <li>Detailed page analytics with rankings</li>
+      <li>Geographic breakdown with country flags</li>
+      <li>Device, browser, and OS statistics</li>
+      <li>Referrer tracking to see where your traffic comes from</li>
+      <li>Secure credential storage using GNOME Keyring</li>
+      <li>Multiple website support with easy switching</li>
+      <li>Configurable date ranges (7, 14, or 30 days)</li>
+    </ul>
+  </description>
+
+  <launchable type="desktop-id">org.andypiper.SimpleAnalyticsViewer.desktop</launchable>
+
+  <url type="homepage">https://github.com/andypiper/simple_analytics_python</url>
+  <url type="bugtracker">https://github.com/andypiper/simple_analytics_python/issues</url>
+
+  <developer id="me.andypiper">
+    <name>Andy Piper</name>
+  </developer>
+
+  <content_rating type="oars-1.1">
+    <content_attribute id="social-info">mild</content_attribute>
+  </content_rating>
+
+  <releases>
+    <release version="0.1.0" date="2025-01-26">
+      <description>
+        <p>Initial release with core analytics viewing features:</p>
+        <ul>
+          <li>Dashboard view with statistics and interactive charts</li>
+          <li>Events, Pages, and Countries views</li>
+          <li>Secure credential management with GNOME Keyring</li>
+          <li>Native GTK4/Adwaita design</li>
+        </ul>
+      </description>
+    </release>
+  </releases>
+
+  <screenshots>
+    <screenshot type="default">
+      <caption>Dashboard view showing pageviews and visitors over time</caption>
+      <!-- Screenshot images would be added here when available -->
+      <!-- <image>https://example.com/screenshot1.png</image> -->
+    </screenshot>
+  </screenshots>
+
+  <keywords>
+    <keyword>analytics</keyword>
+    <keyword>statistics</keyword>
+    <keyword>web</keyword>
+    <keyword>metrics</keyword>
+    <keyword>simple analytics</keyword>
+  </keywords>
+
+  <categories>
+    <category>Office</category>
+    <category>Utility</category>
+  </categories>
+
+  <requires>
+    <display_length compare="ge">360</display_length>
+  </requires>
+
+  <recommends>
+    <control>keyboard</control>
+    <control>pointing</control>
+  </recommends>
+
+  <provides>
+    <binary>analytics-viewer</binary>
+  </provides>
+</component>

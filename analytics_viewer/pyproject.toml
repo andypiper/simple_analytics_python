@@ -4,12 +4,32 @@ version = "0.1.0"
 description = "GNOME GTK4 application for viewing Simple Analytics data"
 readme = "README.md"
 requires-python = ">=3.12"
+license = {text = "MIT"}
+authors = [
+    {name = "Andy Piper", email = "andy@andypiper.me"}
+]
+keywords = ["analytics", "gnome", "gtk4", "simple-analytics"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: X11 Applications :: GTK",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Office/Business",
+    "Topic :: Internet :: WWW/HTTP :: Site Management",
+]
 dependencies = [
     "pygobject>=3.46.0",
-    "simple-analytics-python @ file://../",
-    "matplotlib>=3.8.0",
-    "pillow>=10.0.0",
+    "simple-analytics-python",
 ]
+
+[project.urls]
+Homepage = "https://github.com/andypiper/simple_analytics_python"
+Documentation = "https://github.com/andypiper/simple_analytics_python/tree/main/analytics_viewer"
+Repository = "https://github.com/andypiper/simple_analytics_python"
+Issues = "https://github.com/andypiper/simple_analytics_python/issues"
 
 [project.scripts]
 analytics-viewer = "analytics_viewer.main:main"
@@ -21,5 +41,14 @@ dev = [
 ]
 
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["analytics_viewer", "analytics_viewer.views"]
+
+[tool.setuptools.package-data]
+analytics_viewer = [
+    "*.css",
+    "*.xml",
+]

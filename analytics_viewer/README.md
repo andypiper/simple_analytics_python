@@ -79,9 +79,59 @@ sudo pacman -S python-gobject gtk4 libadwaita
 
 ### Install the Application
 
+#### Easy Installation (Recommended)
+
+Use the provided installation script which handles all setup automatically:
+
 ```bash
 cd analytics_viewer
-pip install -e .
+
+# Install for current user only (no sudo required)
+./install.sh --user
+
+# Or install system-wide (requires sudo)
+./install.sh --system
+```
+
+This script will:
+- Install the Python package
+- Install GSettings schema for credential persistence
+- Install .desktop file for application menu
+- Install AppData metadata
+
+#### Manual Installation
+
+If you prefer to install manually:
+
+```bash
+cd analytics_viewer
+
+# Install Python package
+pip install --user -e .
+
+# Install GSettings schema (for credential persistence)
+mkdir -p ~/.local/share/glib-2.0/schemas/
+cp analytics_viewer/org.andypiper.SimpleAnalyticsViewer.gschema.xml ~/.local/share/glib-2.0/schemas/
+glib-compile-schemas ~/.local/share/glib-2.0/schemas/
+
+# Install desktop file (for application menu)
+mkdir -p ~/.local/share/applications/
+cp data/org.andypiper.SimpleAnalyticsViewer.desktop ~/.local/share/applications/
+update-desktop-database ~/.local/share/applications/
+
+# Install metainfo (for app stores)
+mkdir -p ~/.local/share/metainfo/
+cp data/org.andypiper.SimpleAnalyticsViewer.metainfo.xml ~/.local/share/metainfo/
+```
+
+#### Uninstallation
+
+```bash
+# Uninstall for current user
+./uninstall.sh --user
+
+# Or uninstall system-wide
+./uninstall.sh --system
 ```
 
 ## Configuration
