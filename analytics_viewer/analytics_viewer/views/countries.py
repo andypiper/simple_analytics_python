@@ -54,6 +54,10 @@ class CountriesView(Gtk.ScrolledWindow):
         self.set_vexpand(True)
         self.set_hexpand(True)
 
+        # Store countries data for sorting
+        self.countries_data = []
+        self.current_sort = 0  # 0=pageviews desc, 1=pageviews asc, 2=alphabetical, 3=visitors desc
+
         # Main container
         main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         main_box.set_margin_top(24)
@@ -68,7 +72,18 @@ class CountriesView(Gtk.ScrolledWindow):
 
         countries_group = Adw.PreferencesGroup()
         countries_group.set_title("Countries")
-        countries_group.set_description("Sorted by pageviews")
+
+        # Add sort dropdown to header
+        sort_dropdown = Gtk.DropDown()
+        sort_model = Gtk.StringList()
+        sort_model.append("Most Pageviews")
+        sort_model.append("Least Pageviews")
+        sort_model.append("Alphabetical")
+        sort_model.append("Most Visitors")
+        sort_dropdown.set_model(sort_model)
+        sort_dropdown.set_selected(0)
+        sort_dropdown.connect("notify::selected", self.on_sort_changed)
+        countries_group.set_header_suffix(sort_dropdown)
 
         self.countries_list = Gtk.ListBox()
         self.countries_list.add_css_class("boxed-list")
@@ -147,11 +162,36 @@ class CountriesView(Gtk.ScrolledWindow):
 
     def _update_ui(self, countries, total_pageviews, device_types, browsers, operating_systems):
         """Update UI with loaded data (runs on main thread)."""
+        self.countries_data = countries  # Store for sorting
+        self.total_pageviews = total_pageviews
         self.update_countries_list(countries, total_pageviews)
         self.update_device_types(device_types)
         self.update_browsers(browsers)
         self.update_os(operating_systems)
         return False  # Don't repeat
+
+    def on_sort_changed(self, dropdown, param):
+        """Handle sort option change."""
+        self.current_sort = dropdown.get_selected()
+        self.sort_and_display_countries()
+
+    def sort_and_display_countries(self):
+        """Sort and display countries based on current sort option."""
+        if not self.countries_data:
+            return
+
+        sorted_countries = self.countries_data.copy()
+
+        if self.current_sort == 0:  # Most Pageviews
+            sorted_countries.sort(key=lambda x: x.get("pageviews", 0), reverse=True)
+        elif self.current_sort == 1:  # Least Pageviews
+            sorted_countries.sort(key=lambda x: x.get("pageviews", 0))
+        elif self.current_sort == 2:  # Alphabetical
+            sorted_countries.sort(key=lambda x: x.get("value", ""))
+        elif self.current_sort == 3:  # Most Visitors
+            sorted_countries.sort(key=lambda x: x.get("visitors", 0), reverse=True)
+
+        self.update_countries_list(sorted_countries, self.total_pageviews)
 
     def update_countries_list(self, countries, total_pageviews):
         """Update the countries list."""

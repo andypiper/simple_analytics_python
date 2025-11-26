@@ -17,6 +17,10 @@ class PagesView(Gtk.ScrolledWindow):
         self.set_vexpand(True)
         self.set_hexpand(True)
 
+        # Store pages data for sorting
+        self.pages_data = []
+        self.current_sort = 0  # 0=pageviews desc, 1=pageviews asc, 2=alphabetical, 3=visitors desc
+
         # Main container
         main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         main_box.set_margin_top(24)
@@ -31,7 +35,18 @@ class PagesView(Gtk.ScrolledWindow):
 
         pages_group = Adw.PreferencesGroup()
         pages_group.set_title("All Pages")
-        pages_group.set_description("Sorted by pageviews")
+
+        # Add sort dropdown to header
+        sort_dropdown = Gtk.DropDown()
+        sort_model = Gtk.StringList()
+        sort_model.append("Most Pageviews")
+        sort_model.append("Least Pageviews")
+        sort_model.append("Alphabetical")
+        sort_model.append("Most Visitors")
+        sort_dropdown.set_model(sort_model)
+        sort_dropdown.set_selected(0)
+        sort_dropdown.connect("notify::selected", self.on_sort_changed)
+        pages_group.set_header_suffix(sort_dropdown)
 
         self.pages_list = Gtk.ListBox()
         self.pages_list.add_css_class("boxed-list")
@@ -91,9 +106,33 @@ class PagesView(Gtk.ScrolledWindow):
 
     def _update_ui(self, pages, referrers):
         """Update UI with loaded data (runs on main thread)."""
+        self.pages_data = pages  # Store for sorting
         self.update_pages_list(pages)
         self.update_referrers(referrers)
         return False  # Don't repeat
+
+    def on_sort_changed(self, dropdown, param):
+        """Handle sort option change."""
+        self.current_sort = dropdown.get_selected()
+        self.sort_and_display_pages()
+
+    def sort_and_display_pages(self):
+        """Sort and display pages based on current sort option."""
+        if not self.pages_data:
+            return
+
+        sorted_pages = self.pages_data.copy()
+
+        if self.current_sort == 0:  # Most Pageviews
+            sorted_pages.sort(key=lambda x: x.get("pageviews", 0), reverse=True)
+        elif self.current_sort == 1:  # Least Pageviews
+            sorted_pages.sort(key=lambda x: x.get("pageviews", 0))
+        elif self.current_sort == 2:  # Alphabetical
+            sorted_pages.sort(key=lambda x: x.get("value", "/"))
+        elif self.current_sort == 3:  # Most Visitors
+            sorted_pages.sort(key=lambda x: x.get("visitors", 0), reverse=True)
+
+        self.update_pages_list(sorted_pages)
 
     def update_pages_list(self, pages):
         """Update the pages list."""
