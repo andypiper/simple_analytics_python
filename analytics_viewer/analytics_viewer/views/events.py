@@ -5,7 +5,7 @@ import gi
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 
-from gi.repository import Gtk, Adw
+from gi.repository import Gtk, Adw, GLib
 
 
 class EventsView(Gtk.ScrolledWindow):
@@ -92,9 +92,9 @@ class EventsView(Gtk.ScrolledWindow):
         return card
 
     def load_data(self, client, hostname, start_date, end_date):
-        """Load events data."""
+        """Load events data (thread-safe)."""
         try:
-            # Get events
+            # Get events (happens in background thread)
             stats = client.stats.get_events(
                 hostname,
                 start=start_date,
@@ -118,16 +118,19 @@ class EventsView(Gtk.ScrolledWindow):
                 else:
                     custom_count += count
 
-            # Update cards
-            self.automated_card.value_label.set_text(f"{automated_count:,}")
-            self.custom_card.value_label.set_text(f"{custom_count:,}")
-            self.total_card.value_label.set_text(f"{total_count:,}")
-
-            # Update events list
-            self.update_events_list(events)
+            # Schedule UI updates on main thread
+            GLib.idle_add(self._update_ui, automated_count, custom_count, total_count, events)
 
         except Exception as e:
             print(f"Error loading events data: {e}")
+
+    def _update_ui(self, automated_count, custom_count, total_count, events):
+        """Update UI with loaded data (runs on main thread)."""
+        self.automated_card.value_label.set_text(f"{automated_count:,}")
+        self.custom_card.value_label.set_text(f"{custom_count:,}")
+        self.total_card.value_label.set_text(f"{total_count:,}")
+        self.update_events_list(events)
+        return False  # Don't repeat
 
     def update_events_list(self, events):
         """Update the events list."""

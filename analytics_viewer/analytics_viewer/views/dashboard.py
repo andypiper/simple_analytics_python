@@ -9,7 +9,7 @@ from datetime import datetime
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 
-from gi.repository import Gtk, Adw, Gdk
+from gi.repository import Gtk, Adw, Gdk, GLib
 
 # Use modern Adwaita-styled Cairo charts
 from ..modern_charts import ModernHistogramChart
@@ -169,9 +169,9 @@ class DashboardView(Gtk.ScrolledWindow):
             self.view_stack.set_visible_child_name(view_name)
 
     def load_data(self, client, hostname, start_date, end_date):
-        """Load dashboard data."""
+        """Load dashboard data (thread-safe)."""
         try:
-            # Get basic stats
+            # Get basic stats (happens in background thread)
             stats = client.stats.get(
                 hostname,
                 start=start_date,
@@ -179,14 +179,8 @@ class DashboardView(Gtk.ScrolledWindow):
                 fields=["pageviews", "visitors", "pages", "histogram"]
             )
 
-            # Update stat cards
-            pageviews = stats.get("pageviews", 0)
-            visitors = stats.get("visitors", 0)
-
-            self.pageviews_card.value_label.set_text(f"{pageviews:,}")
-            self.visitors_card.value_label.set_text(f"{visitors:,}")
-
             # Get events count
+            total_events = "N/A"
             try:
                 events_stats = client.stats.get_events(
                     hostname,
@@ -196,21 +190,39 @@ class DashboardView(Gtk.ScrolledWindow):
                 total_events = sum(
                     e.get("total", 0) for e in events_stats.get("events", [])
                 )
-                self.events_card.value_label.set_text(f"{total_events:,}")
             except:
-                self.events_card.value_label.set_text("N/A")
+                pass
 
-            # Update histogram chart with native Cairo rendering
+            # Schedule UI updates on main thread
+            pageviews = stats.get("pageviews", 0)
+            visitors = stats.get("visitors", 0)
             histogram = stats.get("histogram", [])
-            if histogram:
-                # Use last 30 days
-                self.histogram_chart.set_data(histogram[-30:])
+            pages = stats.get("pages", [])
 
-            # Update pages list
-            self.update_pages_list(stats.get("pages", []))
+            GLib.idle_add(self._update_ui, pageviews, visitors, total_events, histogram, pages)
 
         except Exception as e:
             print(f"Error loading dashboard data: {e}")
+
+    def _update_ui(self, pageviews, visitors, total_events, histogram, pages):
+        """Update UI with loaded data (runs on main thread)."""
+        # Update stat cards
+        self.pageviews_card.value_label.set_text(f"{pageviews:,}")
+        self.visitors_card.value_label.set_text(f"{visitors:,}")
+
+        if isinstance(total_events, int):
+            self.events_card.value_label.set_text(f"{total_events:,}")
+        else:
+            self.events_card.value_label.set_text(str(total_events))
+
+        # Update histogram chart
+        if histogram:
+            self.histogram_chart.set_data(histogram[-30:])
+
+        # Update pages list
+        self.update_pages_list(pages)
+
+        return False  # Don't repeat
 
     def update_pages_list(self, pages):
         """Update the top pages list."""

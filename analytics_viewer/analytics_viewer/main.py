@@ -67,8 +67,7 @@ class AnalyticsApplication(Adw.Application):
 
     def on_about(self, action, param):
         """Show about dialog."""
-        about = Adw.AboutWindow(
-            transient_for=self.window,
+        about = Adw.AboutDialog(
             application_name="Simple Analytics Viewer",
             application_icon="org.gnome.Analytics",
             developer_name="Simple Analytics Python Contributors",
@@ -78,8 +77,17 @@ class AnalyticsApplication(Adw.Application):
             license_type=Gtk.License.MIT_X11,
             developers=["Simple Analytics Python Contributors"],
             copyright="© 2024 Simple Analytics Python Contributors",
+            comments=(
+                "This application is built by the community and is not officially associated with "
+                "or endorsed by Simple Analytics. It uses the Simple Analytics API to provide a "
+                "native GNOME experience for viewing your analytics data."
+            ),
         )
-        about.present()
+
+        # Add links section with API docs
+        about.add_link("Simple Analytics API Documentation", "https://docs.simpleanalytics.com/api")
+
+        about.present(self.window)
 
 
 def main():

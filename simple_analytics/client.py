@@ -3,6 +3,7 @@
 import requests
 from typing import Any
 
+from . import __version__
 from .exceptions import (
     SimpleAnalyticsError,
     AuthenticationError,
@@ -25,6 +26,7 @@ class SimpleAnalyticsClient:
         user_id: Your Simple Analytics user ID (starts with 'sa_user_id_').
         base_url: Base URL for the API (default: https://simpleanalytics.com).
         timeout: Request timeout in seconds (default: 30).
+        user_agent: Custom User-Agent header (default: sa-python-api/{version}).
 
     Example:
         >>> from simple_analytics import SimpleAnalyticsClient
@@ -37,6 +39,7 @@ class SimpleAnalyticsClient:
 
     DEFAULT_BASE_URL = "https://simpleanalytics.com"
     API_VERSION = 5
+    DEFAULT_USER_AGENT = f"sa-python-api/{__version__}"
 
     def __init__(
         self,
@@ -44,11 +47,13 @@ class SimpleAnalyticsClient:
         user_id: str | None = None,
         base_url: str = DEFAULT_BASE_URL,
         timeout: int = 30,
+        user_agent: str | None = None,
     ):
         self.api_key = api_key
         self.user_id = user_id
         self.base_url = base_url.rstrip("/")
         self.timeout = timeout
+        self.user_agent = user_agent or self.DEFAULT_USER_AGENT
         self._session = requests.Session()
 
         # Import here to avoid circular imports
@@ -65,6 +70,7 @@ class SimpleAnalyticsClient:
         headers = {
             "Content-Type": "application/json",
             "Accept": "application/json",
+            "User-Agent": self.user_agent,
         }
 
         if self.api_key:

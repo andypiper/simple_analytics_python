@@ -5,7 +5,7 @@ import gi
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 
-from gi.repository import Gtk, Adw
+from gi.repository import Gtk, Adw, GLib
 
 
 class PagesView(Gtk.ScrolledWindow):
@@ -69,8 +69,9 @@ class PagesView(Gtk.ScrolledWindow):
         self.set_child(clamp)
 
     def load_data(self, client, hostname, start_date, end_date):
-        """Load pages and referrers data."""
+        """Load pages and referrers data (thread-safe)."""
         try:
+            # Get stats (happens in background thread)
             stats = client.stats.get(
                 hostname,
                 start=start_date,
@@ -80,13 +81,19 @@ class PagesView(Gtk.ScrolledWindow):
             )
 
             pages = stats.get("pages", [])
-            self.update_pages_list(pages)
-
             referrers = stats.get("referrers", [])
-            self.update_referrers(referrers)
+
+            # Schedule UI updates on main thread
+            GLib.idle_add(self._update_ui, pages, referrers)
 
         except Exception as e:
             print(f"Error loading pages data: {e}")
+
+    def _update_ui(self, pages, referrers):
+        """Update UI with loaded data (runs on main thread)."""
+        self.update_pages_list(pages)
+        self.update_referrers(referrers)
+        return False  # Don't repeat
 
     def update_pages_list(self, pages):
         """Update the pages list."""

@@ -2,6 +2,7 @@
 
 import gi
 import os
+import threading
 from datetime import datetime, timedelta
 
 gi.require_version("Gtk", "4.0")
@@ -10,6 +11,7 @@ gi.require_version("Adw", "1")
 from gi.repository import Gtk, Adw, GLib, Gio, GObject
 
 from simple_analytics import SimpleAnalyticsClient, AuthenticationError
+from . import __version__ as app_version
 
 from .views.dashboard import DashboardView
 from .views.events import EventsView
@@ -96,11 +98,12 @@ class AnalyticsWindow(Adw.ApplicationWindow):
         # Setup actions and keyboard shortcuts
         self.setup_actions()
 
-        # Check authentication
+        # Defer authentication to allow window to show immediately
+        # This improves perceived performance by showing UI before API calls
         if self.api_key and self.user_id:
-            self.authenticate()
+            GLib.idle_add(self.authenticate)
         else:
-            self.show_auth_dialog()
+            GLib.idle_add(self.show_auth_dialog)
 
     def setup_ui(self):
         """Set up the user interface."""
@@ -367,7 +370,8 @@ class AnalyticsWindow(Adw.ApplicationWindow):
         try:
             self.client = SimpleAnalyticsClient(
                 api_key=self.api_key,
-                user_id=self.user_id
+                user_id=self.user_id,
+                user_agent=f"simple-analytics-viewer/{app_version} (GTK4/libadwaita)"
             )
 
             # Fetch websites
@@ -533,7 +537,7 @@ class AnalyticsWindow(Adw.ApplicationWindow):
             self.show_error(f"Export failed: {str(e)}")
 
     def load_data(self):
-        """Load analytics data for the selected website."""
+        """Load analytics data for the selected website asynchronously."""
         if not self.client:
             print("No client available")
             return
@@ -546,27 +550,39 @@ class AnalyticsWindow(Adw.ApplicationWindow):
         end_date = datetime.now().strftime("%Y-%m-%d")
         start_date = (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d")
 
+        print(f"Loading data for {self.hostname} from {start_date} to {end_date}")
+
+        # Load each view in parallel using background threads
+        # This allows all API calls to happen simultaneously
+        views = [
+            (self.dashboard_view, "Dashboard"),
+            (self.events_view, "Events"),
+            (self.pages_view, "Pages"),
+            (self.countries_view, "Countries"),
+        ]
+
+        for view, name in views:
+            thread = threading.Thread(
+                target=self._load_view_data,
+                args=(view, name, self.client, self.hostname, start_date, end_date),
+                daemon=True
+            )
+            thread.start()
+
+    def _load_view_data(self, view, view_name, client, hostname, start_date, end_date):
+        """Load data for a single view in a background thread."""
         try:
-            print(f"Loading data for {self.hostname} from {start_date} to {end_date}")
-
-            # Load data for each view
-            self.dashboard_view.load_data(
-                self.client, self.hostname, start_date, end_date
-            )
-            self.events_view.load_data(
-                self.client, self.hostname, start_date, end_date
-            )
-            self.pages_view.load_data(
-                self.client, self.hostname, start_date, end_date
-            )
-            self.countries_view.load_data(
-                self.client, self.hostname, start_date, end_date
-            )
-
+            print(f"Loading {view_name} data in background...")
+            view.load_data(client, hostname, start_date, end_date)
+            print(f"{view_name} data loaded successfully")
         except Exception as e:
             import traceback
             traceback.print_exc()
-            self.show_error(f"Error loading data: {str(e)}")
+            # Schedule error display on main thread
+            GLib.idle_add(
+                self.show_error,
+                f"Error loading {view_name} data: {str(e)}"
+            )
 
     def show_preferences(self):
         """Show preferences dialog."""

@@ -5,7 +5,7 @@ import gi
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 
-from gi.repository import Gtk, Adw
+from gi.repository import Gtk, Adw, GLib
 
 
 def country_code_to_flag(country_code: str) -> str:
@@ -122,9 +122,9 @@ class CountriesView(Gtk.ScrolledWindow):
         self.set_child(clamp)
 
     def load_data(self, client, hostname, start_date, end_date):
-        """Load countries and devices data."""
+        """Load countries and devices data (thread-safe)."""
         try:
-            # Get countries data
+            # Get countries data (happens in background thread)
             stats = client.stats.get(
                 hostname,
                 start=start_date,
@@ -135,19 +135,23 @@ class CountriesView(Gtk.ScrolledWindow):
 
             countries = stats.get("countries", [])
             total_pageviews = sum(c.get("pageviews", 0) for c in countries)
-            self.update_countries_list(countries, total_pageviews)
-
-            # Load devices data
             device_types = stats.get("device_types", [])
             browsers = stats.get("browser_names", [])
             operating_systems = stats.get("os_names", [])
 
-            self.update_device_types(device_types)
-            self.update_browsers(browsers)
-            self.update_os(operating_systems)
+            # Schedule UI updates on main thread
+            GLib.idle_add(self._update_ui, countries, total_pageviews, device_types, browsers, operating_systems)
 
         except Exception as e:
             print(f"Error loading data: {e}")
+
+    def _update_ui(self, countries, total_pageviews, device_types, browsers, operating_systems):
+        """Update UI with loaded data (runs on main thread)."""
+        self.update_countries_list(countries, total_pageviews)
+        self.update_device_types(device_types)
+        self.update_browsers(browsers)
+        self.update_os(operating_systems)
+        return False  # Don't repeat
 
     def update_countries_list(self, countries, total_pageviews):
         """Update the countries list."""
