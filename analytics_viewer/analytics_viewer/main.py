@@ -87,6 +87,13 @@ class AnalyticsApplication(Adw.Application):
         # Add links section with API docs
         about.add_link("Simple Analytics API Documentation", "https://docs.simpleanalytics.com/api")
 
+        # Add link to related app
+        about.add_other_app(
+            "org.andypiper.Fedinspect",
+            "Fedinspect",
+            "Inspect and debug your Fediverse instance"
+        )
+
         about.present(self.window)
 
 
