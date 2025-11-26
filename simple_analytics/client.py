@@ -3,7 +3,6 @@
 import requests
 from typing import Any
 
-from . import __version__
 from .exceptions import (
     SimpleAnalyticsError,
     AuthenticationError,
@@ -13,6 +12,9 @@ from .exceptions import (
     ServerError,
     NetworkError,
 )
+
+# Version is defined here to avoid circular import
+__version__ = "0.1.0"
 
 
 class SimpleAnalyticsClient:

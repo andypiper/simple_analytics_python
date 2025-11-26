@@ -28,7 +28,7 @@ Example:
     >>> websites = client.admin.list_websites()
 """
 
-from .client import SimpleAnalyticsClient
+from .client import SimpleAnalyticsClient, __version__
 from .exceptions import (
     SimpleAnalyticsError,
     AuthenticationError,
@@ -42,7 +42,6 @@ from .stats import StatsAPI
 from .export import ExportAPI
 from .admin import AdminAPI
 
-__version__ = "0.1.0"
 __author__ = "Simple Analytics Python Client Contributors"
 
 __all__ = [
