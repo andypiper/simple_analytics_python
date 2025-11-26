@@ -46,7 +46,6 @@ class EventsView(Gtk.ScrolledWindow):
 
         events_group = Adw.PreferencesGroup()
         events_group.set_title("All Events")
-        events_group.set_description("Click on an event to see details")
 
         self.events_list = Gtk.ListBox()
         self.events_list.add_css_class("boxed-list")
@@ -166,6 +165,7 @@ class EventsView(Gtk.ScrolledWindow):
             row = Adw.ActionRow()
             row.set_title(name)
             row.set_subtitle(f"{total:,} occurrences • {event_type}")
+            row.set_activatable(False)
 
             # Add icon
             icon = Gtk.Image.new_from_icon_name(icon_name)

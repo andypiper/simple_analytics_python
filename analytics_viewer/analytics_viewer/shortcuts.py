@@ -43,10 +43,10 @@ def create_shortcuts_window(parent):
         views_group = Adw.PreferencesGroup()
         views_group.set_title("Views")
 
-        views_group.add(_create_shortcut_row("Dashboard", "Ctrl+1"))
-        views_group.add(_create_shortcut_row("Events", "Ctrl+2"))
-        views_group.add(_create_shortcut_row("Pages", "Ctrl+3"))
-        views_group.add(_create_shortcut_row("Countries", "Ctrl+4"))
+        views_group.add(_create_shortcut_row("Dashboard", "<Control>1"))
+        views_group.add(_create_shortcut_row("Events", "<Control>2"))
+        views_group.add(_create_shortcut_row("Pages", "<Control>3"))
+        views_group.add(_create_shortcut_row("Countries", "<Control>4"))
 
         views_clamp.set_child(views_group)
         content_box.append(views_clamp)
@@ -57,8 +57,8 @@ def create_shortcuts_window(parent):
         actions_group = Adw.PreferencesGroup()
         actions_group.set_title("Actions")
 
-        actions_group.add(_create_shortcut_row("Refresh Data", "Ctrl+R, F5"))
-        actions_group.add(_create_shortcut_row("Export Data", "Ctrl+E"))
+        actions_group.add(_create_shortcut_row("Refresh Data", "<Control>R F5"))
+        actions_group.add(_create_shortcut_row("Export Data", "<Control>E"))
 
         actions_clamp.set_child(actions_group)
         content_box.append(actions_clamp)
@@ -69,9 +69,9 @@ def create_shortcuts_window(parent):
         general_group = Adw.PreferencesGroup()
         general_group.set_title("General")
 
-        general_group.add(_create_shortcut_row("Preferences", "Ctrl+,"))
-        general_group.add(_create_shortcut_row("Keyboard Shortcuts", "Ctrl+?"))
-        general_group.add(_create_shortcut_row("Quit", "Ctrl+Q"))
+        general_group.add(_create_shortcut_row("Preferences", "<Control>comma"))
+        general_group.add(_create_shortcut_row("Keyboard Shortcuts", "<Control>question"))
+        general_group.add(_create_shortcut_row("Quit", "<Control>Q"))
 
         general_clamp.set_child(general_group)
         content_box.append(general_clamp)

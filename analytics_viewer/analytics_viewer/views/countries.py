@@ -179,6 +179,7 @@ class CountriesView(Gtk.ScrolledWindow):
             percentage = (pageviews / total_pageviews * 100) if total_pageviews > 0 else 0
 
             row = Adw.ActionRow()
+            row.set_activatable(False)
 
             # Generate flag emoji dynamically from country code
             flag = country_code_to_flag(code)
@@ -222,6 +223,7 @@ class CountriesView(Gtk.ScrolledWindow):
             row = Adw.ActionRow()
             row.set_title(value)
             row.set_subtitle(f"{pageviews:,} pageviews ({percentage:.1f}%)")
+            row.set_activatable(False)
 
             # Add progress bar
             progress = Gtk.ProgressBar()
@@ -253,6 +255,7 @@ class CountriesView(Gtk.ScrolledWindow):
             row = Adw.ActionRow()
             row.set_title(f"#{i + 1} {value}")
             row.set_subtitle(f"{pageviews:,} pageviews ({percentage:.1f}%)")
+            row.set_activatable(False)
 
             # Add progress bar
             progress = Gtk.ProgressBar()
@@ -284,6 +287,7 @@ class CountriesView(Gtk.ScrolledWindow):
             row = Adw.ActionRow()
             row.set_title(f"#{i + 1} {value}")
             row.set_subtitle(f"{pageviews:,} pageviews ({percentage:.1f}%)")
+            row.set_activatable(False)
 
             # Add progress bar
             progress = Gtk.ProgressBar()

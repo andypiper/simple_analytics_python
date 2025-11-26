@@ -120,6 +120,7 @@ class PagesView(Gtk.ScrolledWindow):
             row = Adw.ActionRow()
             row.set_title(path)
             row.set_subtitle(f"{pageviews:,} pageviews • {visitors:,} visitors")
+            row.set_activatable(False)
 
             # Add rank
             rank_label = Gtk.Label(label=f"#{i + 1}")
@@ -151,6 +152,7 @@ class PagesView(Gtk.ScrolledWindow):
             row = Adw.ActionRow()
             row.set_title(value if value else "(direct)")
             row.set_subtitle(f"{pageviews:,} pageviews")
+            row.set_activatable(False)
 
             # Add rank
             rank_label = Gtk.Label(label=f"#{i + 1}")

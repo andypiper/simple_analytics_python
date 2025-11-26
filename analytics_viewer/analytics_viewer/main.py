@@ -70,13 +70,13 @@ class AnalyticsApplication(Adw.Application):
         about = Adw.AboutDialog(
             application_name="Simple Analytics Viewer",
             application_icon="org.gnome.Analytics",
-            developer_name="Simple Analytics Python Contributors",
+            developer_name="Andy Piper",
             version="0.1.0",
             website="https://github.com/andypiper/simple_analytics_python",
             issue_url="https://github.com/andypiper/simple_analytics_python/issues",
             license_type=Gtk.License.MIT_X11,
-            developers=["Simple Analytics Python Contributors"],
-            copyright="© 2024 Simple Analytics Python Contributors",
+            developers=["Andy Piper"],
+            copyright="© 2025 Andy Piper",
             comments=(
                 "This application is built by the community and is not officially associated with "
                 "or endorsed by Simple Analytics. It uses the Simple Analytics API to provide a "
