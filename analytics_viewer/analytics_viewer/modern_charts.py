@@ -54,7 +54,7 @@ class AdwaitaColors:
 
 
 class ModernHistogramChart(Gtk.DrawingArea):
-    """A beautiful modern histogram chart with Adwaita styling."""
+    """A beautiful modern histogram chart with Adwaita styling and interactivity."""
 
     def __init__(self, histogram: list[dict[str, Any]] = None):
         super().__init__()
@@ -66,6 +66,20 @@ class ModernHistogramChart(Gtk.DrawingArea):
         self.set_size_request(400, 300)  # Min: 400x300
         self.set_hexpand(True)  # Expand horizontally
         self.set_vexpand(False)
+
+        # Interactive features
+        self.hovered_bar = -1  # Index of currently hovered bar
+        self.bar_positions = []  # Store bar positions for hit detection
+
+        # Enable mouse motion events
+        motion_controller = Gtk.EventControllerMotion()
+        motion_controller.connect("motion", self._on_motion)
+        motion_controller.connect("leave", self._on_leave)
+        self.add_controller(motion_controller)
+
+        # Enable tooltips
+        self.set_has_tooltip(True)
+        self.connect("query-tooltip", self._on_query_tooltip)
 
     def set_data(self, histogram: list[dict[str, Any]]):
         """Update the histogram data and redraw."""
@@ -175,18 +189,28 @@ class ModernHistogramChart(Gtk.DrawingArea):
         cr.set_source_rgb(*AdwaitaColors.BLUE_3)
         cr.stroke()
 
-        # Draw pageviews points
+        # Draw pageviews points and track positions for interaction
+        self.bar_positions = []
         for i, value in enumerate(pageviews):
             x = margin_left + (plot_width / (len(pageviews) - 1)) * i
             y = margin_top + plot_height - (value / max_value) * plot_height
 
-            # Outer glow
-            cr.arc(x, y, 5, 0, 2 * math.pi)
-            cr.set_source_rgba(*AdwaitaColors.BLUE_2, 0.3)
+            # Track position for hit detection (expanded hit area)
+            hit_radius = 15
+            self.bar_positions.append((x - hit_radius, y - hit_radius, hit_radius * 2, hit_radius * 2))
+
+            # Highlight if hovered
+            is_hovered = (i == self.hovered_bar)
+            point_size = 5 if is_hovered else 3.5
+            glow_size = 8 if is_hovered else 5
+
+            # Outer glow (larger when hovered)
+            cr.arc(x, y, glow_size, 0, 2 * math.pi)
+            cr.set_source_rgba(*AdwaitaColors.BLUE_2, 0.4 if is_hovered else 0.3)
             cr.fill()
 
-            # Main point
-            cr.arc(x, y, 3.5, 0, 2 * math.pi)
+            # Main point (larger when hovered)
+            cr.arc(x, y, point_size, 0, 2 * math.pi)
             cr.set_source_rgb(*AdwaitaColors.BLUE_3)
             cr.fill()
 
@@ -338,3 +362,39 @@ class ModernHistogramChart(Gtk.DrawingArea):
         extents = cr.text_extents(text)
         cr.move_to((width - extents.width) / 2, height / 2)
         cr.show_text(text)
+
+    def _on_motion(self, controller, x, y):
+        """Handle mouse motion - detect hovering over data points."""
+        if not self.histogram or not self.bar_positions:
+            return
+
+        # Check if mouse is over any bar
+        hovered = -1
+        for i, (bar_x, bar_y, bar_width, bar_height) in enumerate(self.bar_positions):
+            if bar_x <= x <= bar_x + bar_width and bar_y <= y <= bar_y + bar_height:
+                hovered = i
+                break
+
+        if hovered != self.hovered_bar:
+            self.hovered_bar = hovered
+            self.queue_draw()
+
+    def _on_leave(self, controller):
+        """Handle mouse leaving the widget."""
+        if self.hovered_bar != -1:
+            self.hovered_bar = -1
+            self.queue_draw()
+
+    def _on_query_tooltip(self, widget, x, y, keyboard_mode, tooltip):
+        """Show tooltip with data when hovering over a bar."""
+        if self.hovered_bar >= 0 and self.hovered_bar < len(self.histogram):
+            data = self.histogram[self.hovered_bar]
+            date = data.get("date", "")
+            pageviews = data.get("pageviews", 0)
+            visitors = data.get("visitors", 0)
+
+            tooltip_text = f"{date}\n{pageviews:,} pageviews\n{visitors:,} visitors"
+            tooltip.set_text(tooltip_text)
+            return True
+
+        return False

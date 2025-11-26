@@ -22,7 +22,7 @@ from .views.pages import PagesView
 from .views.countries import CountriesView
 from .preferences import PreferencesDialog
 from .shortcuts import create_shortcuts_window
-from .constants import UI, DateRanges, Limits
+from .constants import UI, DateRanges, DateRange, Limits
 
 logger = logging.getLogger(__name__)
 
@@ -124,6 +124,7 @@ class AnalyticsWindow(Adw.ApplicationWindow):
 
         self.client = None
         self.websites = []
+        self.current_date_range = DateRange.THIRTY_DAYS  # Default to 30 days
 
         # Create UI
         self.setup_ui()
@@ -169,6 +170,18 @@ class AnalyticsWindow(Adw.ApplicationWindow):
         self.website_dropdown.set_factory(selected_factory)
 
         self.header_bar.pack_start(self.website_dropdown)
+
+        # Date range selector
+        self.date_range_dropdown = Gtk.DropDown()
+        date_range_model = Gtk.StringList()
+        date_range_model.append("7 days")
+        date_range_model.append("14 days")
+        date_range_model.append("30 days")
+        self.date_range_dropdown.set_model(date_range_model)
+        self.date_range_dropdown.set_selected(2)  # Default to 30 days
+        self.date_range_dropdown.set_tooltip_text("Select date range")
+        self.date_range_dropdown.connect("notify::selected", self.on_date_range_changed)
+        self.header_bar.pack_start(self.date_range_dropdown)
 
         # Refresh button
         refresh_button = Gtk.Button(icon_name="view-refresh-symbolic")
@@ -500,6 +513,21 @@ class AnalyticsWindow(Adw.ApplicationWindow):
             else:
                 logger.error(f"Invalid website at index {selected}: {self.websites[selected]}")
 
+    def on_date_range_changed(self, dropdown, param):
+        """Handle date range selection change."""
+        selected = dropdown.get_selected()
+        # Map dropdown index to DateRange enum
+        range_map = {
+            0: DateRange.SEVEN_DAYS,
+            1: DateRange.FOURTEEN_DAYS,
+            2: DateRange.THIRTY_DAYS,
+        }
+
+        if selected in range_map:
+            self.current_date_range = range_map[selected]
+            logger.info(f"Date range changed to {self.current_date_range} days")
+            self.load_data()
+
     def on_refresh_clicked(self, button):
         """Handle refresh button click."""
         self.load_data()
@@ -593,9 +621,10 @@ class AnalyticsWindow(Adw.ApplicationWindow):
             self._current_load_generation += 1
             current_gen = self._current_load_generation
 
-        # Calculate date range using constant
+        # Calculate date range using selected range
         end_date = datetime.now().strftime("%Y-%m-%d")
-        start_date = (datetime.now() - DateRanges.DEFAULT_RANGE).strftime("%Y-%m-%d")
+        date_delta = DateRanges.RANGE_MAP[self.current_date_range]
+        start_date = (datetime.now() - date_delta).strftime("%Y-%m-%d")
 
         # Capture values to avoid race conditions
         client = self.client

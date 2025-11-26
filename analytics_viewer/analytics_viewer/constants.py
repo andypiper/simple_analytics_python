@@ -18,10 +18,24 @@ class SortOrder(StrEnum):
     VISITORS_DESC = "visitors_desc"
 
 
+class DateRange(StrEnum):
+    """Available date range options."""
+    SEVEN_DAYS = "7"
+    FOURTEEN_DAYS = "14"
+    THIRTY_DAYS = "30"
+
+
 class DateRanges:
     """Date range constants for analytics queries."""
     DEFAULT_RANGE = timedelta(days=30)
     MAX_HISTOGRAM_POINTS = 30
+
+    # Map enum values to timedeltas
+    RANGE_MAP = {
+        DateRange.SEVEN_DAYS: timedelta(days=7),
+        DateRange.FOURTEEN_DAYS: timedelta(days=14),
+        DateRange.THIRTY_DAYS: timedelta(days=30),
+    }
 
 
 class Limits:
