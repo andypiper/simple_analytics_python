@@ -13,6 +13,7 @@ from gi.repository import Gtk, Adw, GLib, Gio, GObject
 
 from simple_analytics import SimpleAnalyticsClient, AuthenticationError
 from . import __version__ as app_version
+from .keyring import CredentialManager
 
 from .views.dashboard import DashboardView
 from .views.events import EventsView
@@ -49,19 +50,26 @@ class AnalyticsWindow(Adw.ApplicationWindow):
                 old_user_id = old_settings.get_string("user-id")
                 old_hostname = old_settings.get_string("hostname")
 
-                # Migrate if old values exist and new values don't
-                if old_api_key and not self.settings.get_string("api-key"):
-                    self.settings.set_string("api-key", old_api_key)
-                if old_user_id and not self.settings.get_string("user-id"):
-                    self.settings.set_string("user-id", old_user_id)
+                # Migrate credentials to keyring if they exist
+                if old_api_key and not CredentialManager.retrieve_api_key():
+                    CredentialManager.store_api_key(old_api_key)
+                    print("Migrated API key from old GSettings to keyring")
+                if old_user_id and not CredentialManager.retrieve_user_id():
+                    CredentialManager.store_user_id(old_user_id)
+                    print("Migrated user ID from old GSettings to keyring")
+
+                # Migrate hostname to new GSettings (not sensitive)
                 if old_hostname and not self.settings.get_string("hostname"):
                     self.settings.set_string("hostname", old_hostname)
 
-            # Try GSettings first, fallback to env vars
-            saved_api_key = self.settings.get_string("api-key")
-            saved_user_id = self.settings.get_string("user-id")
+            # Get credentials from keyring (secure storage)
+            saved_api_key = CredentialManager.retrieve_api_key()
+            saved_user_id = CredentialManager.retrieve_user_id()
+
+            # Get hostname from GSettings (not sensitive)
             saved_hostname = self.settings.get_string("hostname")
 
+            print(f"__init__: Read from keyring: api_key={'set' if saved_api_key else 'not set'}, user_id={'set' if saved_user_id else 'not set'}")
             print(f"__init__: Read from GSettings: hostname='{saved_hostname}'")
 
             # Use saved values or fall back to env vars
@@ -71,24 +79,38 @@ class AnalyticsWindow(Adw.ApplicationWindow):
 
             print(f"__init__: Final hostname after fallback: '{self.hostname}'")
 
-            # If we got values from env vars, save them to GSettings for next time
+            # If we got values from env vars, save them for next time
             if not saved_api_key and self.api_key:
-                self.settings.set_string("api-key", self.api_key)
+                CredentialManager.store_api_key(self.api_key)
+                print("Stored API key from env var to keyring")
             if not saved_user_id and self.user_id:
-                self.settings.set_string("user-id", self.user_id)
+                CredentialManager.store_user_id(self.user_id)
+                print("Stored user ID from env var to keyring")
             if not saved_hostname and self.hostname:
                 self.settings.set_string("hostname", self.hostname)
 
-            # Force sync to ensure writes are persisted
+            # Force sync to ensure GSettings writes are persisted
             Gio.Settings.sync()
         else:
-            # Fallback if schema not installed
+            # Fallback if schema not installed - still use keyring for credentials
             self.settings = None
-            self.api_key = os.environ.get("SA_API_KEY", "")
-            self.user_id = os.environ.get("SA_USER_ID", "")
+
+            # Get credentials from keyring (secure storage)
+            saved_api_key = CredentialManager.retrieve_api_key()
+            saved_user_id = CredentialManager.retrieve_user_id()
+
+            # Use saved values or fall back to env vars
+            self.api_key = saved_api_key or os.environ.get("SA_API_KEY", "")
+            self.user_id = saved_user_id or os.environ.get("SA_USER_ID", "")
             self.hostname = os.environ.get("SA_HOSTNAME", "")
 
-            print("Note: GSettings schema not installed - credentials won't persist between sessions")
+            # If we got values from env vars, save credentials to keyring
+            if not saved_api_key and self.api_key:
+                CredentialManager.store_api_key(self.api_key)
+            if not saved_user_id and self.user_id:
+                CredentialManager.store_user_id(self.user_id)
+
+            print("Note: GSettings schema not installed - hostname won't persist between sessions")
             print("See analytics_viewer/INSTALL_GSETTINGS.md for installation instructions")
 
         # Thread pool for API calls (limit concurrent requests)
@@ -625,16 +647,20 @@ class AnalyticsWindow(Adw.ApplicationWindow):
         self.user_id = user_id
         self.hostname = hostname
 
-        # Save to GSettings for persistence
+        # Save credentials to keyring (secure storage)
+        CredentialManager.store_api_key(api_key)
+        CredentialManager.store_user_id(user_id)
+
+        # Save hostname to GSettings (not sensitive)
         if self.settings:
-            self.settings.set_string("api-key", api_key)
-            self.settings.set_string("user-id", user_id)
             self.settings.set_string("hostname", hostname)
 
         # Save to environment (for session only)
         os.environ["SA_API_KEY"] = api_key
         os.environ["SA_USER_ID"] = user_id
         os.environ["SA_HOSTNAME"] = hostname
+
+        print("Credentials saved to keyring")
 
         # Re-authenticate
         self.authenticate()

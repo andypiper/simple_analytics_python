@@ -167,11 +167,6 @@ class PagesView(Gtk.ScrolledWindow):
             rank_label.set_width_chars(4)
             row.add_prefix(rank_label)
 
-            # Add chevron
-            chevron = Gtk.Image.new_from_icon_name("go-next-symbolic")
-            chevron.add_css_class("dim-label")
-            row.add_suffix(chevron)
-
             self.pages_list.append(row)
 
     def update_referrers(self, referrers):
