@@ -129,6 +129,7 @@ class SimpleAnalyticsClient:
         params: dict | None = None,
         json: dict | None = None,
         require_auth: bool = False,
+        timeout: int | tuple[int, int] | None = None,
     ) -> Any:
         """
         Make an HTTP request to the API.
@@ -139,12 +140,21 @@ class SimpleAnalyticsClient:
             params: Query parameters.
             json: JSON body data.
             require_auth: Whether authentication is required.
+            timeout: Request-specific timeout override in seconds.
+                    Can be int (total), tuple (connect, read), or None (use default).
 
         Returns:
             Parsed response data.
+
+        Raises:
+            NetworkError: For network-related issues including timeouts.
+            SimpleAnalyticsError: For API errors.
         """
         url = f"{self.base_url}{endpoint}"
         headers = self._get_headers(require_auth)
+
+        # Use request-specific timeout or fall back to client default
+        request_timeout = timeout if timeout is not None else self.timeout
 
         try:
             response = self._session.request(
@@ -153,10 +163,10 @@ class SimpleAnalyticsClient:
                 headers=headers,
                 params=params,
                 json=json,
-                timeout=self.timeout,
+                timeout=request_timeout,
             )
         except requests.exceptions.Timeout as e:
-            raise NetworkError(f"Request timed out: {e}") from e
+            raise NetworkError(f"Request timed out after {request_timeout}s: {e}") from e
         except requests.exceptions.ConnectionError as e:
             raise NetworkError(f"Connection error: {e}") from e
         except requests.exceptions.RequestException as e:
@@ -164,9 +174,15 @@ class SimpleAnalyticsClient:
 
         return self._handle_response(response)
 
-    def get(self, endpoint: str, params: dict | None = None, require_auth: bool = False) -> Any:
-        """Make a GET request."""
-        return self.request("GET", endpoint, params=params, require_auth=require_auth)
+    def get(
+        self,
+        endpoint: str,
+        params: dict | None = None,
+        require_auth: bool = False,
+        timeout: int | tuple[int, int] | None = None,
+    ) -> Any:
+        """Make a GET request with optional timeout override."""
+        return self.request("GET", endpoint, params=params, require_auth=require_auth, timeout=timeout)
 
     def post(self, endpoint: str, json: dict | None = None, require_auth: bool = False) -> Any:
         """Make a POST request."""

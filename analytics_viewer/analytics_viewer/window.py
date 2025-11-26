@@ -3,6 +3,7 @@
 import gi
 import os
 import threading
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
 
 gi.require_version("Gtk", "4.0")
@@ -86,8 +87,14 @@ class AnalyticsWindow(Adw.ApplicationWindow):
             self.api_key = os.environ.get("SA_API_KEY", "")
             self.user_id = os.environ.get("SA_USER_ID", "")
             self.hostname = os.environ.get("SA_HOSTNAME", "")
+
             print("Note: GSettings schema not installed - credentials won't persist between sessions")
             print("See analytics_viewer/INSTALL_GSETTINGS.md for installation instructions")
+
+        # Thread pool for API calls (limit concurrent requests)
+        self._executor = ThreadPoolExecutor(max_workers=4, thread_name_prefix="api-")
+        self._current_load_generation = 0
+        self._load_lock = threading.Lock()
 
         self.client = None
         self.websites = []
@@ -104,6 +111,15 @@ class AnalyticsWindow(Adw.ApplicationWindow):
             GLib.idle_add(self.authenticate)
         else:
             GLib.idle_add(self.show_auth_dialog)
+
+        # Connect cleanup handler
+        self.connect("close-request", self.on_close_request)
+
+    def on_close_request(self, *args):
+        """Clean up resources before closing."""
+        print("Window closing - shutting down thread pool")
+        self._executor.shutdown(wait=False, cancel_futures=True)
+        return False  # Allow window to close
 
     def setup_ui(self):
         """Set up the user interface."""
@@ -546,14 +562,23 @@ class AnalyticsWindow(Adw.ApplicationWindow):
             print("No hostname selected")
             return
 
+        # Cancel any in-flight loads from previous website selection
+        with self._load_lock:
+            self._current_load_generation += 1
+            current_gen = self._current_load_generation
+
         # Calculate date range (last 30 days)
         end_date = datetime.now().strftime("%Y-%m-%d")
         start_date = (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d")
 
-        print(f"Loading data for {self.hostname} from {start_date} to {end_date}")
+        # Capture values to avoid race conditions
+        client = self.client
+        hostname = self.hostname
 
-        # Load each view in parallel using background threads
-        # This allows all API calls to happen simultaneously
+        print(f"Loading data for {hostname} from {start_date} to {end_date} (gen {current_gen})")
+
+        # Load each view in parallel using thread pool
+        # This limits concurrent requests and allows cancellation
         views = [
             (self.dashboard_view, "Dashboard"),
             (self.events_view, "Events"),
@@ -562,19 +587,23 @@ class AnalyticsWindow(Adw.ApplicationWindow):
         ]
 
         for view, name in views:
-            thread = threading.Thread(
-                target=self._load_view_data,
-                args=(view, name, self.client, self.hostname, start_date, end_date),
-                daemon=True
+            self._executor.submit(
+                self._load_view_data,
+                view, name, client, hostname, start_date, end_date, current_gen
             )
-            thread.start()
 
-    def _load_view_data(self, view, view_name, client, hostname, start_date, end_date):
-        """Load data for a single view in a background thread."""
+    def _load_view_data(self, view, view_name, client, hostname, start_date, end_date, generation):
+        """Load data for a single view with generation check for cancellation."""
         try:
-            print(f"Loading {view_name} data in background...")
+            # Check if this load was superseded by a newer request
+            with self._load_lock:
+                if generation != self._current_load_generation:
+                    print(f"Skipping outdated {view_name} load (gen {generation})")
+                    return
+
+            print(f"Loading {view_name} data in background (gen {generation})...")
             view.load_data(client, hostname, start_date, end_date)
-            print(f"{view_name} data loaded successfully")
+            print(f"{view_name} data loaded successfully (gen {generation})")
         except Exception as e:
             import traceback
             traceback.print_exc()
