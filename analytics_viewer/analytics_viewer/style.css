@@ -1,0 +1,32 @@
+/* Chart legend dots - Default scheme (Blue/Green) */
+.chart-legend-dot-primary-default {
+  background-color: #1c71d8;
+  border-radius: 50%;
+}
+
+.chart-legend-dot-secondary-default {
+  background-color: #26a269;
+  border-radius: 50%;
+}
+
+/* Chart legend dots - Purple/Orange scheme */
+.chart-legend-dot-primary-purple_orange {
+  background-color: #9b4fd9;
+  border-radius: 50%;
+}
+
+.chart-legend-dot-secondary-purple_orange {
+  background-color: #ff7800;
+  border-radius: 50%;
+}
+
+/* Chart legend dots - Green/Blue scheme */
+.chart-legend-dot-primary-green_blue {
+  background-color: #26a269;
+  border-radius: 50%;
+}
+
+.chart-legend-dot-secondary-green_blue {
+  background-color: #1c71d8;
+  border-radius: 50%;
+}

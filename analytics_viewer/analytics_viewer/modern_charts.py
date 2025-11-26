@@ -56,10 +56,11 @@ class AdwaitaColors:
 class ModernHistogramChart(Gtk.DrawingArea):
     """A beautiful modern histogram chart with Adwaita styling and interactivity."""
 
-    def __init__(self, histogram: list[dict[str, Any]] = None):
+    def __init__(self, histogram: list[dict[str, Any]] = None, color_scheme: str = "default"):
         super().__init__()
 
         self.histogram = histogram or []
+        self.color_scheme = color_scheme
         self.set_draw_func(self._draw)
         # Don't set fixed width - let it adapt to container
         # Set minimum size instead
@@ -86,11 +87,43 @@ class ModernHistogramChart(Gtk.DrawingArea):
         self.histogram = histogram
         self.queue_draw()
 
+    def set_color_scheme(self, color_scheme: str):
+        """Update the color scheme and redraw."""
+        self.color_scheme = color_scheme
+        self.queue_draw()
+
+    def _get_colors(self):
+        """Get colors based on the current color scheme."""
+        if self.color_scheme == "purple_orange":
+            return {
+                "primary": AdwaitaColors.PURPLE_3,
+                "primary_light": AdwaitaColors.PURPLE_2,
+                "secondary": AdwaitaColors.ORANGE_3,
+                "secondary_light": AdwaitaColors.ORANGE_2,
+            }
+        elif self.color_scheme == "green_blue":
+            return {
+                "primary": AdwaitaColors.GREEN_3,
+                "primary_light": AdwaitaColors.GREEN_2,
+                "secondary": AdwaitaColors.BLUE_3,
+                "secondary_light": AdwaitaColors.BLUE_2,
+            }
+        else:  # default
+            return {
+                "primary": AdwaitaColors.BLUE_3,
+                "primary_light": AdwaitaColors.BLUE_2,
+                "secondary": AdwaitaColors.GREEN_3,
+                "secondary_light": AdwaitaColors.GREEN_2,
+            }
+
     def _draw(self, area, cr, width, height):
         """Draw function called by GTK."""
         if not self.histogram:
             self._draw_empty(cr, width, height)
             return
+
+        # Get colors for current scheme
+        colors = self._get_colors()
 
         # Responsive margins - scale down on narrow screens
         if width < 600:
@@ -151,8 +184,8 @@ class ModernHistogramChart(Gtk.DrawingArea):
 
         # Apply gradient fill using Cairo LinearGradient
         pattern = cairo.LinearGradient(0, margin_top, 0, margin_top + plot_height)
-        pattern.add_color_stop_rgba(0, *AdwaitaColors.BLUE_2, 0.2)
-        pattern.add_color_stop_rgba(1, *AdwaitaColors.BLUE_2, 0.0)
+        pattern.add_color_stop_rgba(0, *colors["primary_light"], 0.2)
+        pattern.add_color_stop_rgba(1, *colors["primary_light"], 0.0)
         cr.set_source(pattern)
         cr.fill()
 
@@ -186,7 +219,7 @@ class ModernHistogramChart(Gtk.DrawingArea):
             else:
                 cr.line_to(x, y)
 
-        cr.set_source_rgb(*AdwaitaColors.BLUE_3)
+        cr.set_source_rgb(*colors["primary"])
         cr.stroke()
 
         # Draw pageviews points and track positions for interaction
@@ -206,12 +239,12 @@ class ModernHistogramChart(Gtk.DrawingArea):
 
             # Outer glow (larger when hovered)
             cr.arc(x, y, glow_size, 0, 2 * math.pi)
-            cr.set_source_rgba(*AdwaitaColors.BLUE_2, 0.4 if is_hovered else 0.3)
+            cr.set_source_rgba(*colors["primary_light"], 0.4 if is_hovered else 0.3)
             cr.fill()
 
             # Main point (larger when hovered)
             cr.arc(x, y, point_size, 0, 2 * math.pi)
-            cr.set_source_rgb(*AdwaitaColors.BLUE_3)
+            cr.set_source_rgb(*colors["primary"])
             cr.fill()
 
             # Inner highlight
@@ -242,7 +275,7 @@ class ModernHistogramChart(Gtk.DrawingArea):
             else:
                 cr.line_to(x, y)
 
-        cr.set_source_rgb(*AdwaitaColors.GREEN_3)
+        cr.set_source_rgb(*colors["secondary"])
         cr.stroke()
 
         # Draw visitors points
@@ -251,11 +284,11 @@ class ModernHistogramChart(Gtk.DrawingArea):
             y = margin_top + plot_height - (value / max_value) * plot_height
 
             cr.arc(x, y, 5, 0, 2 * math.pi)
-            cr.set_source_rgba(*AdwaitaColors.GREEN_2, 0.3)
+            cr.set_source_rgba(*colors["secondary_light"], 0.3)
             cr.fill()
 
             cr.arc(x, y, 3.5, 0, 2 * math.pi)
-            cr.set_source_rgb(*AdwaitaColors.GREEN_3)
+            cr.set_source_rgb(*colors["secondary"])
             cr.fill()
 
             cr.arc(x, y, 2, 0, 2 * math.pi)
@@ -305,38 +338,8 @@ class ModernHistogramChart(Gtk.DrawingArea):
             cr.restore()
 
         # Draw legend with rounded rectangles (no title for cleaner look)
-        # Only show legend if there's enough space
-        if width >= 500:
-            legend_x = margin_left + plot_width - 160
-            legend_y = margin_top + 5
-
-            # Legend background - subtle translucent card
-            self._draw_rounded_rect(cr, legend_x - 10, legend_y - 8, 150, 45, 8)
-            cr.set_source_rgba(1.0, 1.0, 1.0, 0.85)
-            cr.fill_preserve()
-            cr.set_source_rgba(*AdwaitaColors.GRAY_3, 0.3)
-            cr.set_line_width(1)
-            cr.stroke()
-
-            # Pageviews legend
-            self._draw_rounded_rect(cr, legend_x, legend_y, 18, 8, 4)
-            cr.set_source_rgb(*AdwaitaColors.BLUE_3)
-            cr.fill()
-
-            cr.set_source_rgb(*AdwaitaColors.TEXT)
-            cr.set_font_size(11)
-            cr.select_font_face("Sans", 0, 0)
-            cr.move_to(legend_x + 25, legend_y + 8)
-            cr.show_text("Pageviews")
-
-            # Visitors legend
-            self._draw_rounded_rect(cr, legend_x, legend_y + 20, 18, 8, 4)
-            cr.set_source_rgb(*AdwaitaColors.GREEN_3)
-            cr.fill()
-
-            cr.set_source_rgb(*AdwaitaColors.TEXT)
-            cr.move_to(legend_x + 25, legend_y + 28)
-            cr.show_text("Visitors")
+        # Legend has been moved to the chart header in dashboard.py
+        # No longer drawing it as an overlay on the chart
 
     def _draw_rounded_rect(self, cr, x, y, width, height, radius):
         """Draw a rounded rectangle path."""

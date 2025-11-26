@@ -19,8 +19,9 @@ import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
+gi.require_version("Gdk", "4.0")
 
-from gi.repository import Gtk, Adw, Gio, GLib
+from gi.repository import Gtk, Adw, Gio, GLib, Gdk
 
 from .window import AnalyticsWindow
 from .logging_config import setup_logging
@@ -45,6 +46,9 @@ class AnalyticsApplication(Adw.Application):
     def do_startup(self):
         """Called when the application starts."""
         Adw.Application.do_startup(self)
+
+        # Load custom CSS
+        self._load_css()
 
         # Create actions
         quit_action = Gio.SimpleAction.new("quit", None)
@@ -96,6 +100,20 @@ class AnalyticsApplication(Adw.Application):
         )
 
         about.present(self.window)
+
+    def _load_css(self):
+        """Load custom CSS styles."""
+        from pathlib import Path
+
+        css_path = Path(__file__).parent / "style.css"
+        if css_path.exists():
+            css_provider = Gtk.CssProvider()
+            css_provider.load_from_path(str(css_path))
+            Gtk.StyleContext.add_provider_for_display(
+                Gdk.Display.get_default(),
+                css_provider,
+                Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+            )
 
 
 def main():

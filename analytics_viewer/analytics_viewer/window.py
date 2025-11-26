@@ -142,6 +142,9 @@ class AnalyticsWindow(Adw.ApplicationWindow):
         # Connect cleanup handler
         self.connect("close-request", self.on_close_request)
 
+        # Connect date range dropdown from dashboard
+        self.dashboard_view.date_range_dropdown.connect("notify::selected", self.on_date_range_changed)
+
     def on_close_request(self, *args):
         """Clean up resources before closing."""
         logger.info("Window closing - shutting down thread pool")
@@ -170,18 +173,6 @@ class AnalyticsWindow(Adw.ApplicationWindow):
         self.website_dropdown.set_factory(selected_factory)
 
         self.header_bar.pack_start(self.website_dropdown)
-
-        # Date range selector
-        self.date_range_dropdown = Gtk.DropDown()
-        date_range_model = Gtk.StringList()
-        date_range_model.append("7 days")
-        date_range_model.append("14 days")
-        date_range_model.append("30 days")
-        self.date_range_dropdown.set_model(date_range_model)
-        self.date_range_dropdown.set_selected(2)  # Default to 30 days
-        self.date_range_dropdown.set_tooltip_text("Select date range")
-        self.date_range_dropdown.connect("notify::selected", self.on_date_range_changed)
-        self.header_bar.pack_start(self.date_range_dropdown)
 
         # Refresh button
         refresh_button = Gtk.Button(icon_name="view-refresh-symbolic")
