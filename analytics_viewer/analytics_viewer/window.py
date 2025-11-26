@@ -22,6 +22,7 @@ from .views.pages import PagesView
 from .views.countries import CountriesView
 from .preferences import PreferencesDialog
 from .shortcuts import create_shortcuts_window
+from .constants import UI, DateRanges, Limits
 
 logger = logging.getLogger(__name__)
 
@@ -33,8 +34,8 @@ class AnalyticsWindow(Adw.ApplicationWindow):
         super().__init__(**kwargs)
 
         # Set window properties
-        self.set_default_size(1200, 800)
-        self.set_size_request(360, 360)  # GNOME HIG minimum
+        self.set_default_size(UI.WINDOW_DEFAULT_WIDTH, UI.WINDOW_DEFAULT_HEIGHT)
+        self.set_size_request(UI.WINDOW_MIN_SIZE, UI.WINDOW_MIN_SIZE)  # GNOME HIG minimum
         self.set_title("Simple Analytics Viewer")
 
         # Initialize GSettings for credential persistence
@@ -117,7 +118,7 @@ class AnalyticsWindow(Adw.ApplicationWindow):
             logger.info("See analytics_viewer/INSTALL_GSETTINGS.md for installation instructions")
 
         # Thread pool for API calls (limit concurrent requests)
-        self._executor = ThreadPoolExecutor(max_workers=4, thread_name_prefix="api-")
+        self._executor = ThreadPoolExecutor(max_workers=Limits.MAX_CONCURRENT_THREADS, thread_name_prefix="api-")
         self._current_load_generation = 0
         self._load_lock = threading.Lock()
 
@@ -592,9 +593,9 @@ class AnalyticsWindow(Adw.ApplicationWindow):
             self._current_load_generation += 1
             current_gen = self._current_load_generation
 
-        # Calculate date range (last 30 days)
+        # Calculate date range using constant
         end_date = datetime.now().strftime("%Y-%m-%d")
-        start_date = (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d")
+        start_date = (datetime.now() - DateRanges.DEFAULT_RANGE).strftime("%Y-%m-%d")
 
         # Capture values to avoid race conditions
         client = self.client

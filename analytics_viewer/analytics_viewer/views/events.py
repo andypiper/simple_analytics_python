@@ -112,10 +112,12 @@ class EventsView(Gtk.ScrolledWindow):
                 count = event.get("total", 0)
                 total_count += count
 
-                if name.startswith(("outbound", "click_email", "download_")):
-                    automated_count += count
-                else:
-                    custom_count += count
+                # Categorize events using modern match statement
+                match name:
+                    case str() if name.startswith(("outbound", "click_email", "download_")):
+                        automated_count += count
+                    case _:
+                        custom_count += count
 
             # Schedule UI updates on main thread
             GLib.idle_add(self._update_ui, automated_count, custom_count, total_count, events)

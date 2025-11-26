@@ -14,6 +14,7 @@ from gi.repository import Gtk, Adw, Gdk, GLib
 
 # Use modern Adwaita-styled Cairo charts
 from ..modern_charts import ModernHistogramChart
+from ..constants import DateRanges
 
 logger = logging.getLogger(__name__)
 
@@ -218,9 +219,9 @@ class DashboardView(Gtk.ScrolledWindow):
         else:
             self.events_card.value_label.set_text(str(total_events))
 
-        # Update histogram chart
+        # Update histogram chart (limit to configured max points)
         if histogram:
-            self.histogram_chart.set_data(histogram[-30:])
+            self.histogram_chart.set_data(histogram[-DateRanges.MAX_HISTOGRAM_POINTS:])
 
         # Update pages list
         self.update_pages_list(pages)
