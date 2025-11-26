@@ -4,18 +4,18 @@
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>MIT</project_license>
   <name>Simple Analytics Viewer</name>
-  <summary>View your Simple Analytics data with a beautiful GNOME interface</summary>
+  <summary>View your Simple Analytics data in a native GNOME interface</summary>
 
   <description>
     <p>
       Simple Analytics Viewer is a native GNOME application for viewing your Simple Analytics data.
-      Built with GTK4 and libadwaita, it provides a beautiful, modern interface that fits perfectly
-      with your GNOME desktop.
+      Built with GTK4 and libadwaita, it provides a modern interface that integrates with your
+      GNOME desktop.
     </p>
     <p>Features:</p>
     <ul>
-      <li>Beautiful dashboard with native Cairo-rendered charts</li>
-      <li>Interactive line charts with hover tooltips showing pageviews and visitors</li>
+      <li>Dashboard with native Cairo-rendered charts</li>
+      <li>Interactive line charts with tooltips showing pageviews and visitors</li>
       <li>Events tracking for both custom and automated events</li>
       <li>Detailed page analytics with rankings</li>
       <li>Geographic breakdown with country flags</li>
